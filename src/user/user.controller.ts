@@ -10,7 +10,7 @@ export class UserController
 {
   constructor(private readonly userService: UserService, private authService: AuthService) { }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Post()
   create(@Body() createUserDto: CreateUserDto)
   {
