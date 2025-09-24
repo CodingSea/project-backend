@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
+import { User } from './user/entities/user.entity';
 
 
 @Module({
@@ -21,7 +22,7 @@ import { UserModule } from './user/user.module';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [],
+        entities: [User],
         database: 'projectDB',
         synchronize: true,
         logging: true,
