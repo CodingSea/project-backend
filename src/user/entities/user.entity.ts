@@ -18,15 +18,15 @@ export class User
     @Column({ type: 'varchar' })
     password: string;
 
-    @Column({type: 'enum', enum: ["admin", "developer"]})
+    @Column({type: 'enum', enum: ["admin", "developer"], default: "developer"})
     role: string;
 
-    @Column({ type: "varchar" })
+    @Column({ type: "varchar", nullable: true })
     profileImage: string
 
-    @Column({ type: "varchar" })
+    @Column({ type: "varchar", nullable: true })
     profileImageID: string
 
-    @Column({ type: "varchar", array: true })
+    @Column({ type: "varchar", array: true, nullable: true })
     skills: string[]
 }

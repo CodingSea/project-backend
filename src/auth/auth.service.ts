@@ -12,6 +12,9 @@ export class AuthService
 
     async signIn(email: string, pass: string): Promise<{access_token: string}>
     {
+
+        console.log(email);
+        console.log(pass);
         const user = await this.userService.findByEmail(email);
         if(user?.password !== pass)
         {
@@ -21,7 +24,7 @@ export class AuthService
         const payload = {sub: user.id, email: user.email, first_name: user.first_name, last_name: user.last_name}
 
         return {
-            access_token: await this.jwtService.signAsync(payload),
+            access_token: await this.jwtService.sign(payload),
         };
     }
 }

@@ -14,7 +14,14 @@ export class UserService
 
   create(createUserDto: CreateUserDto)
   {
-    return 'This action adds a new user';
+    const user: User = new User();
+
+    user.first_name = createUserDto.first_name;
+    user.last_name = createUserDto.last_name;
+    user.email = createUserDto.email;
+    user.password = createUserDto.password;
+
+    return this.userRepository.save(user);
   }
 
   findAll()
