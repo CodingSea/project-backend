@@ -6,6 +6,12 @@ import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { ProjectModule } from './project/project.module';
+import { ServiceModule } from './service/service.module';
+import { CommentModule } from './comment/comment.module';
+import { Project } from './project/entities/project.entity';
+import { Service } from './service/entities/service.entity';
+import { Comment } from './comment/entities/comment.entity';
 
 
 @Module({
@@ -23,14 +29,17 @@ import { AuthModule } from './auth/auth.module';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [User],
+        entities: [User, Project, Service, Comment],
         database: 'projectDB',
         synchronize: true,
         logging: true,
       }
     ),
     UserModule,
-    AuthModule
+    AuthModule,
+    ProjectModule,
+    ServiceModule,
+    CommentModule
   ],
   controllers: [ AppController ],
   providers: [ AppService ],
