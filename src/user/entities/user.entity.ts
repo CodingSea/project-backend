@@ -1,4 +1,6 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Certificate } from "src/certificate/entities/certificate.entity";
+import { Service } from "src/service/entities/service.entity";
 
 @Entity()
 export class User 
@@ -18,7 +20,7 @@ export class User
     @Column({ type: 'varchar' })
     password: string;
 
-    @Column({type: 'enum', enum: ["admin", "developer"], default: "developer"})
+    @Column({ type: 'enum', enum: [ "admin", "developer" ], default: "developer" })
     role: string;
 
     @Column({ type: "varchar", nullable: true })
@@ -29,4 +31,10 @@ export class User
 
     @Column({ type: "varchar", array: true, nullable: true })
     skills: string[]
+
+    @OneToMany(() => Certificate, certificate => certificate.userId)
+    certificates: Certificate[];
+
+    @Column('text', { array: true, nullable: true })
+    userServices: string[];
 }

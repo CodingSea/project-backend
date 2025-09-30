@@ -29,7 +29,12 @@ export class UserService
 
   findAll()
   {
-    return `This action returns all user`;
+    return this.userRepository.find();
+  }
+
+  findAllDevelopers()
+  {
+    return this.userRepository.findBy({role: "developer"});
   }
 
   findOne(id: number)

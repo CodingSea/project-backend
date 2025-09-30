@@ -12,6 +12,8 @@ import { CommentModule } from './comment/comment.module';
 import { Project } from './project/entities/project.entity';
 import { Service } from './service/entities/service.entity';
 import { Comment } from './comment/entities/comment.entity';
+import { CertificateModule } from './certificate/certificate.module';
+import { Certificate } from './certificate/entities/certificate.entity';
 
 
 @Module({
@@ -29,7 +31,7 @@ import { Comment } from './comment/entities/comment.entity';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [User, Project, Service, Comment],
+        entities: [User, Project, Service, Comment, Certificate],
         database: 'projectDB',
         synchronize: true,
         logging: true,
@@ -39,7 +41,8 @@ import { Comment } from './comment/entities/comment.entity';
     AuthModule,
     ProjectModule,
     ServiceModule,
-    CommentModule
+    CommentModule,
+    CertificateModule
   ],
   controllers: [ AppController ],
   providers: [ AppService ],
