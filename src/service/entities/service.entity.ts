@@ -9,6 +9,9 @@ export class Service
     @PrimaryGeneratedColumn()
     serviceID: number;
 
+    @Column({ type: 'varchar' })
+    name: string;
+
     @ManyToOne(() => Project, (project) => project.services, { onDelete: 'CASCADE' })
     project: Project;
 
