@@ -49,11 +49,20 @@ export class UserService
 
   update(id: number, updateUserDto: UpdateUserDto)
   {
-    return `This action updates a #${id} user`;
+    const user: User = new User();
+
+    user.first_name = updateUserDto.first_name;
+    user.last_name = updateUserDto.last_name;
+    user.email = updateUserDto.email;
+    user.role = updateUserDto.role;
+    user.skills = updateUserDto.skills;
+    user.id = id;
+
+    return this.userRepository.save(user);
   }
 
   remove(id: number)
   {
-    return `This action removes a #${id} user`;
+    return this.userRepository.delete(id);
   }
 }

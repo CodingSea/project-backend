@@ -11,10 +11,11 @@ import
     IsNotEmpty,
     isString,
     Matches,
-    MinLength
+    MinLength,
+    IsArray
 } from "class-validator";
 
-export class UpdateUserDto extends PartialType(CreateUserDto) 
+export class UpdateUserDto extends PartialType(CreateUserDto)
 {
     @IsString()
     @MinLength(2, { message: "First Name must have atleast 2 characters." })
@@ -33,5 +34,8 @@ export class UpdateUserDto extends PartialType(CreateUserDto)
     @IsEnum([ "admin", 'developer' ])
     role: string;
 
-    
+    @IsArray()
+    @IsString({ each: true })
+    skills: string[];
+
 }
