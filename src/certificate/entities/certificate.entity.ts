@@ -3,8 +3,8 @@ import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Certificate {
-    @PrimaryGeneratedColumn('uuid') // or 'increment' if you prefer auto-incrementing IDs
-    certificateID: string;
+    @PrimaryGeneratedColumn()
+    certificateID: number;
 
     @ManyToOne(() => User, user => user.certificates)
     userId: User;
@@ -22,11 +22,11 @@ export class Certificate {
     issueDate: Date;
 
     @Column()
-    expireDate: Date;
+    expiryDate: Date;
 
     @Column({ nullable: true })
     description: string;
 
     @Column({ type: 'varchar', nullable: true })
-    certificateFile: string; // Assuming this stores the file path or URL
+    certificateFile: string;
 }

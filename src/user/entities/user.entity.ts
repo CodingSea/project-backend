@@ -36,5 +36,5 @@ export class User
     certificates: Certificate[];
 
     @Column('text', { array: true, nullable: true })
-    userServices: string[];
+    userServices: number[];
 }
