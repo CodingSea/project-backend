@@ -2,33 +2,46 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { Service } from './entities/service.entity';
 
 @Controller('service')
-export class ServiceController {
-  constructor(private readonly serviceService: ServiceService) {}
+export class ServiceController
+{
+  constructor(private readonly serviceService: ServiceService) { }
+
+  @Get('user/:id')
+  async getUserServices(@Param('id') id: number): Promise<Service[]>
+  {
+    return this.serviceService.getAllServicesForUser(id);
+  }
 
   @Post()
-  create(@Body() createServiceDto: CreateServiceDto) {
+  create(@Body() createServiceDto: CreateServiceDto)
+  {
     return this.serviceService.create(createServiceDto);
   }
 
   @Get()
-  findAll() {
+  findAll()
+  {
     return this.serviceService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string)
+  {
     return this.serviceService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
+  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto)
+  {
     return this.serviceService.update(+id, updateServiceDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string)
+  {
     return this.serviceService.remove(+id);
   }
 }

@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { User } from './entities/user.entity';
 
 @Controller('user')
 export class UserController
@@ -23,10 +24,15 @@ export class UserController
     return this.userService.findAll();
   }
 
-  @Get('developers')
-  findAllDevelopers()
-  {
-    return this.userService.findAllDevelopers();
+  // @Get('developers')
+  // findAllDevelopers()
+  // {
+  //   return this.userService.findAllDevelopers();
+  // }
+
+  @Get("developers")
+  async getDevelopers(@Query('search') search: string): Promise<User[]> {
+    return this.userService.findAllDevelopers(search);
   }
 
   @Get(':id')
