@@ -4,36 +4,48 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
-export class ProjectService
-{
+export class ProjectService {
   constructor(
-    @InjectRepository(Project) private readonly userRepository: Repository<Project>,
-  ) { }
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>, // ✅ renamed
+  ) {}
 
-  create(createProjectDto: CreateProjectDto)
-  {
-    return 'This action adds a new project';
+  // ✅ Create new project
+  async create(createProjectDto: CreateProjectDto): Promise<Project> {
+    const project = this.projectRepository.create(createProjectDto);
+    return this.projectRepository.save(project);
   }
 
-  findAll()
-  {
-    return this.userRepository.find();
+  // ✅ Get all projects
+  findAll(): Promise<Project[]> {
+    return this.projectRepository.find();
   }
 
-  findOne(id: number)
-  {
-    return `This action returns a #${id} project`;
+  async findOne(id: number): Promise<Project> {
+    const project = await this.projectRepository.findOneBy({ projectID: id });
+    if (!project) {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+    return project;
   }
+  
 
-  update(id: number, updateProjectDto: UpdateProjectDto)
-  {
-    return `This action updates a #${id} project`;
+// ✅ Update project by ID
+async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project> {
+  await this.projectRepository.update(id, updateProjectDto);
+  const project = await this.projectRepository.findOneBy({ projectID: id });
+  if (!project) {
+    throw new NotFoundException(`Project ${id} not found`);
   }
+  return project;
+}
 
-  remove(id: number)
-  {
-    return `This action removes a #${id} project`;
+
+  // ✅ Delete project
+  async remove(id: number): Promise<void> {
+    await this.projectRepository.delete(id);
   }
 }

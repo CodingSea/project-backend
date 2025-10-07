@@ -14,6 +14,9 @@ import { Service } from './service/entities/service.entity';
 import { Comment } from './comment/entities/comment.entity';
 import { CertificateModule } from './certificate/certificate.module';
 import { Certificate } from './certificate/entities/certificate.entity';
+import { TaskBoardModule } from './task-board/task-board.module';
+import { CardModule } from './card/card.module';
+import { TasksModule } from './tasks/tasks.module';
 
 
 @Module({
@@ -42,7 +45,10 @@ import { Certificate } from './certificate/entities/certificate.entity';
     ProjectModule,
     ServiceModule,
     CommentModule,
-    CertificateModule
+    CertificateModule,
+    TaskBoardModule,
+    CardModule,
+    TasksModule
   ],
   controllers: [ AppController ],
   providers: [ AppService ],
