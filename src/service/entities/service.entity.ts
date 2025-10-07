@@ -6,10 +6,12 @@ import {
     ManyToMany,
     JoinTable,
     OneToMany,
+    OneToOne,
   } from 'typeorm';
   import { Project } from 'src/project/entities/project.entity';
   import { User } from 'src/user/entities/user.entity';
   import { Comment } from 'src/comment/entities/comment.entity';
+import { TaskBoard } from 'src/task-board/entities/task-board.entity';
   
   export enum ServiceStatus {
     Pending = 'pending',
