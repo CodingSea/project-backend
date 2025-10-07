@@ -3,13 +3,13 @@ import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 
-@Controller('service')
+@Controller('services') // ✅ plural to match frontend
 export class ServiceController {
   constructor(private readonly serviceService: ServiceService) {}
 
   @Post()
-  create(@Body() createServiceDto: CreateServiceDto) {
-    return this.serviceService.create(createServiceDto);
+  create(@Body() dto: CreateServiceDto) {
+    return this.serviceService.create(dto);
   }
 
   @Get()
@@ -23,8 +23,8 @@ export class ServiceController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
-    return this.serviceService.update(+id, updateServiceDto);
+  update(@Param('id') id: string, @Body() dto: UpdateServiceDto) {
+    return this.serviceService.update(+id, dto);
   }
 
   @Delete(':id')
