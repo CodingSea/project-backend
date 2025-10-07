@@ -10,9 +10,16 @@ export class ServiceController
   constructor(private readonly serviceService: ServiceService) { }
 
   @Get('user/:id')
-  async getUserServices(@Param('id') id: number): Promise<Service[]>
+  async getServicesByUser(@Param('id') userId: number): Promise<Service[]>
   {
-    return this.serviceService.getAllServicesForUser(id);
+    const services = await this.serviceService.getAllServicesForUser(userId);
+
+    if (services.length === 0)
+    {
+      return []; 
+    }
+
+    return services;
   }
 
   @Post()

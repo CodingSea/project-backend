@@ -7,45 +7,53 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 
 @Injectable()
-export class ProjectService {
+export class ProjectService
+{
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>, // ✅ renamed
-  ) {}
+  ) { }
 
   // ✅ Create new project
-  async create(createProjectDto: CreateProjectDto): Promise<Project> {
+  async create(createProjectDto: CreateProjectDto): Promise<Project>
+  {
     const project = this.projectRepository.create(createProjectDto);
     return this.projectRepository.save(project);
   }
 
   // ✅ Get all projects
-  findAll(): Promise<Project[]> {
+  findAll(): Promise<Project[]>
+  {
     return this.projectRepository.find();
   }
 
-  async findOne(id: number): Promise<Project> {
+  async findOne(id: number): Promise<Project>
+  {
     const project = await this.projectRepository.findOneBy({ projectID: id });
-    if (!project) {
+    if (!project)
+    {
       throw new NotFoundException(`Project ${id} not found`);
     }
     return project;
   }
-  
 
-// ✅ Update project by ID
-async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project> {
-  await this.projectRepository.update(id, updateProjectDto);
-  const project = await this.projectRepository.findOneBy({ projectID: id });
-  if (!project) {
-    throw new NotFoundException(`Project ${id} not found`);
+
+  // ✅ Update project by ID
+  async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project>
+  {
+    await this.projectRepository.update(id, updateProjectDto);
+    const project = await this.projectRepository.findOneBy({ projectID: id });
+    if (!project)
+    {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+    return project;
   }
-  return project;
-}
 
 
   // ✅ Delete project
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<void>
+  {
     await this.projectRepository.delete(id);
   }
 }

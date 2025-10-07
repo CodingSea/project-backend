@@ -17,6 +17,8 @@ import { Certificate } from './certificate/entities/certificate.entity';
 import { TaskBoardModule } from './task-board/task-board.module';
 import { CardModule } from './card/card.module';
 import { TasksModule } from './tasks/tasks.module';
+import { TaskBoard } from './task-board/entities/task-board.entity';
+import { Card } from './card/entities/card.entity';
 
 
 @Module({
@@ -34,7 +36,7 @@ import { TasksModule } from './tasks/tasks.module';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [User, Project, Service, Comment, Certificate],
+        entities: [User, Project, Service, Comment, Certificate, TaskBoard, Card],
         database: 'projectDB',
         synchronize: true,
         logging: true,
