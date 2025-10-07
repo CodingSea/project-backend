@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany, OneToOne } from 'typeorm';
 import { Project } from 'src/project/entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
+import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 
 @Entity()
 export class Service
@@ -41,4 +42,7 @@ export class Service
 
     @OneToMany(() => Comment, (comment) => comment.service, { cascade: true })
     comments: Comment[];
+
+    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true })
+    taskBoard: TaskBoard;
 }
