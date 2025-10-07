@@ -24,12 +24,6 @@ export class UserController
     return this.userService.findAll();
   }
 
-  // @Get('developers')
-  // findAllDevelopers()
-  // {
-  //   return this.userService.findAllDevelopers();
-  // }
-
   @Get("developers")
   async getDevelopers(@Query('search') search: string): Promise<User[]> {
     return this.userService.findAllDevelopers(search);
