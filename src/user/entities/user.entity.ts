@@ -34,7 +34,4 @@ export class User
 
     @OneToMany(() => Certificate, certificate => certificate.userId)
     certificates: Certificate[];
-
-    @Column('text', { array: true, nullable: true })
-    userServices: number[];
 }

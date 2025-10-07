@@ -32,9 +32,25 @@ export class UserService
     return this.userRepository.find();
   }
 
-  findAllDevelopers()
+  async findAllDevelopers(searchTerm?: string): Promise<User[]>
   {
-    return this.userRepository.findBy({role: "developer"});
+    // return this.userRepository.findBy({role: "developer"});
+
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    if (searchTerm)
+    {
+      const search = `%${searchTerm.toLowerCase()}%`;
+      queryBuilder.where(
+        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search)) AND user.role = :role',
+        { search, role: 'developer' }
+      );
+    } else
+    {
+      queryBuilder.where('user.role = :role', { role: 'developer' });
+    }
+
+    return await queryBuilder.getMany();
   }
 
   findOne(id: number)

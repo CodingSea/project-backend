@@ -18,6 +18,9 @@ export class ServiceService {
 
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+     
+     @InjectRepository(Service)
+    private readonly serviceRepository: Repository<Service>
   ) {}
 
   // ✅ CREATE SERVICE
@@ -120,6 +123,25 @@ export class ServiceService {
     }
 
     return this.svcRepo.save(svc);
+  }
+  
+  async getAllServicesForUser(userId: number): Promise<Service[]>
+  {
+    try
+    {
+      return await this.serviceRepository
+        .createQueryBuilder('service')
+        .leftJoinAndSelect('service.chief', 'chief')
+        .leftJoinAndSelect('service.projectManager', 'projectManager')
+        .leftJoinAndSelect('service.assignedResources', 'assignedResources')
+        .leftJoinAndSelect('service.backup', 'backup')
+        .where('chief.id = :userId OR projectManager.id = :userId OR assignedResources.id = :userId OR backup.id = :userId', { userId })
+        .getMany();
+    } catch (error)
+    {
+      console.error('Error fetching services for user:', error);
+      throw new Error('Could not fetch services');
+    }
   }
 
   // ✅ DELETE

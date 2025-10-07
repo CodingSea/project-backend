@@ -54,6 +54,8 @@ import {
     assignedResources?: User[];
   
     @OneToMany(() => Comment, (comment) => comment.service, { cascade: true })
-    comments?: Comment[];
-  }
-  
+    comments: Comment[];
+
+    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true })
+    taskBoard: TaskBoard;
+}
