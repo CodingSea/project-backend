@@ -121,4 +121,9 @@ export class TasksService
         const newCard = this.cardRepository.create({ title, column, description, taskBoard, tags });
         return await this.cardRepository.save(newCard);
     }
+
+    async deleteCard(cardId: number): Promise<void>
+    {
+        await this.cardRepository.delete(cardId);
+    }
 }
