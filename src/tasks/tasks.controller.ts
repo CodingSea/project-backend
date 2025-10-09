@@ -47,12 +47,13 @@ export class TasksController
     @Post('task-board/:taskBoardId/cards')
     async createCard(
         @Param('taskBoardId') taskBoardId: number,
+        @Body('serviceId') serviceId: number,
         @Body('column') column: string,
         @Body('title') title: string,
         @Body('description') description: string
     ): Promise<Card>
     {
-        return this.tasksService.createCard(taskBoardId, column, title, description);
+        return this.tasksService.createCard(taskBoardId, serviceId, column, title, description);
     }
 
     // Get All Cards for a TaskBoard
