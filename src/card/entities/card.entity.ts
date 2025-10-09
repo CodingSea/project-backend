@@ -22,4 +22,7 @@ export class Card
 
     @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards)
     taskBoard: TaskBoard;
+
+    @Column('varchar', { array: true, nullable: true })
+    tags: string[]; 
 }

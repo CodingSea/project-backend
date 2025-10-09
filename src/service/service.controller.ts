@@ -3,11 +3,22 @@ import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { Service } from './entities/service.entity';
+import { TasksService } from 'src/tasks/tasks.service';
+import { TaskBoard } from 'src/task-board/entities/task-board.entity';
+import { Card } from 'src/card/entities/card.entity';
+import { CreateCardDto } from 'src/card/dto/create-card.dto';
+import { UpdateCardDto } from 'src/card/dto/update-card.dto';
 
 @Controller('service')
 export class ServiceController
 {
-  constructor(private readonly serviceService: ServiceService) { }
+  constructor(private readonly serviceService: ServiceService, private readonly tasksService: TasksService) { }
+
+  @Get(':serviceId/tasks')
+  async getCards(@Param('serviceId') serviceId: number): Promise<Card[]>
+  {
+    return this.tasksService.getCardsFromTaskBoard(serviceId);
+  }
 
   @Get('user/:id')
   async getServicesByUser(@Param('id') userId: number): Promise<Service[]>
@@ -16,7 +27,7 @@ export class ServiceController
 
     if (services.length === 0)
     {
-      return []; 
+      return [];
     }
 
     return services;
@@ -50,5 +61,20 @@ export class ServiceController
   remove(@Param('id') id: string)
   {
     return this.serviceService.remove(+id);
+  }
+
+  @Post(':taskBoardId/cards')
+  async createCard(
+    @Param('taskBoardId') taskBoardId: number,
+    @Body() createCardDto: CreateCardDto
+  )
+  {
+    return await this.tasksService.createCardIfNotExists(taskBoardId, createCardDto);
+  }
+
+  @Patch(':taskBoardId/tasks/:cardId')
+  async updateCard(@Param('serviceId') serviceId: number, @Param('cardId') cardId: number, @Body() updateCardDto: UpdateCardDto): Promise<Card>
+  {
+    return this.tasksService.updateCard(cardId, updateCardDto);
   }
 }
