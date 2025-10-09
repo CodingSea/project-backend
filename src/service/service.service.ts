@@ -126,4 +126,12 @@ export class ServiceService {
   async remove(id: number): Promise<void> {
     await this.svcRepo.delete(id);
   }
+
+  // ✅ Save attachment URLs for a specific service
+async addAttachments(serviceId: number, urls: string[]): Promise<void> {
+  const svc = await this.findOne(serviceId);
+  (svc as any).attachments = urls; // temporary if you don’t have the column yet
+  await this.svcRepo.save(svc);
+}
+
 }

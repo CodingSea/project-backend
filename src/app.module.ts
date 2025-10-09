@@ -14,7 +14,8 @@ import { Service } from './service/entities/service.entity';
 import { Comment } from './comment/entities/comment.entity';
 import { CertificateModule } from './certificate/certificate.module';
 import { Certificate } from './certificate/entities/certificate.entity';
-
+import { S3Module } from './s3/s3.module';
+import { TestController } from './test.controller';
 
 @Module({
   imports: [
@@ -42,9 +43,10 @@ import { Certificate } from './certificate/entities/certificate.entity';
     ProjectModule,
     ServiceModule,
     CommentModule,
-    CertificateModule
+    CertificateModule,
+    S3Module
   ],
-  controllers: [ AppController ],
+  controllers: [ AppController,TestController ],
   providers: [ AppService ],
 })
 export class AppModule { }
