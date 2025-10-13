@@ -150,9 +150,9 @@ export class ServiceService
       return await this.svcRepo
         .createQueryBuilder('service')
         .leftJoinAndSelect('service.chief', 'chief')
-        .leftJoinAndSelect('service.projectManager', 'projectManager') 
+        .leftJoinAndSelect('service.projectManager', 'projectManager')
         .leftJoinAndSelect('service.assignedResources', 'assignedResources')
-        .leftJoinAndSelect('service.backup', 'backup') 
+        .leftJoinAndSelect('service.backup', 'backup')
         .where(
           'chief.id = :userId OR projectManager.id = :userId OR assignedResources.id = :userId OR backup.id = :userId',
           { userId }
@@ -170,4 +170,13 @@ export class ServiceService
   {
     await this.svcRepo.delete(id);
   }
+
+  // ✅ Save attachment URLs for a specific service
+  async addAttachments(serviceId: number, urls: string[]): Promise<void>
+  {
+    const svc = await this.findOne(serviceId);
+    (svc as any).attachments = urls; // temporary if you don’t have the column yet
+    await this.svcRepo.save(svc);
+  }
+
 }

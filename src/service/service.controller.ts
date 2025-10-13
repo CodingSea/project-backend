@@ -1,18 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import
+{
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
-import { Service } from './entities/service.entity';
+import { S3Service } from 'src/s3/s3.service';
+import { Express } from 'express'; // ✅ Added import for Express types
 import { TasksService } from 'src/tasks/tasks.service';
-import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Card } from 'src/card/entities/card.entity';
+import { Service } from './entities/service.entity';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
 import { UpdateCardDto } from 'src/card/dto/update-card.dto';
 
 @Controller('service')
 export class ServiceController
 {
-  constructor(private readonly serviceService: ServiceService, private readonly tasksService: TasksService) { }
+  constructor(
+    private readonly serviceService: ServiceService,
+    private readonly s3Service: S3Service,
+    private readonly tasksService: TasksService,
+  ) { }
 
   @Get(':serviceId/tasks')
   async getCards(@Param('serviceId') serviceId: number): Promise<Card[]>
@@ -34,11 +51,56 @@ export class ServiceController
     return services;
   }
 
+  // ✅ Create service + upload attachments
   @Post()
-  create(@Body() createServiceDto: CreateServiceDto)
+  @UseInterceptors(FilesInterceptor('files'))
+  async createServiceWithFiles(
+    @Body() rawBody: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  )
   {
-    return this.serviceService.create(createServiceDto);
+    console.log('📦 Incoming body:', rawBody);
+
+    // ✅ Parse numbers and arrays safely
+    const dto: CreateServiceDto = {
+      name: rawBody.name,
+      description: rawBody.description,
+      deadline: rawBody.deadline,
+      projectId: Number(rawBody.projectId),
+      chiefId: Number(rawBody.chiefId),
+      managerId: Number(rawBody.managerId),
+      resources: Array.isArray(rawBody.resources)
+        ? rawBody.resources.map((r: any) => Number(r))
+        : rawBody.resources
+          ? [ Number(rawBody.resources) ]
+          : [],
+    };
+
+    // Step 1: Create service in DB
+    const service = await this.serviceService.create(dto);
+
+    // Step 2: Upload files to S3
+    const urls: string[] = [];
+    for (const file of files || [])
+    {
+      const key = `services/${service.serviceID}/${Date.now()}-${file.originalname}`;
+      const url = await this.s3Service.uploadBuffer(file.buffer, key);
+      urls.push(url);
+    }
+
+    // Step 3: Save file URLs in DB
+    if (urls.length > 0)
+    {
+      await this.serviceService.addAttachments(service.serviceID, urls);
+    }
+
+    return {
+      message: 'Service created successfully',
+      service,
+      attachments: urls,
+    };
   }
+
 
   @Get()
   findAll()

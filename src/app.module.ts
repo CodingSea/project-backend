@@ -20,6 +20,8 @@ import { TasksModule } from './tasks/tasks.module';
 import { TaskBoard } from './task-board/entities/task-board.entity';
 import { Card } from './card/entities/card.entity';
 
+import { S3Module } from './s3/s3.module';
+import { TestController } from './test.controller';
 
 @Module({
   imports: [
@@ -36,7 +38,7 @@ import { Card } from './card/entities/card.entity';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [User, Project, Service, Comment, Certificate, TaskBoard, Card],
+        entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card ],
         database: 'projectDB',
         synchronize: true,
         logging: true,
@@ -50,9 +52,10 @@ import { Card } from './card/entities/card.entity';
     CertificateModule,
     TaskBoardModule,
     CardModule,
-    TasksModule
+    TasksModule,
+    S3Module
   ],
-  controllers: [ AppController ],
+  controllers: [ AppController, TestController ],
   providers: [ AppService ],
 })
 export class AppModule { }

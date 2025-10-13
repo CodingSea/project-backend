@@ -3,10 +3,9 @@ import { ProjectService } from './project.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 
-@Controller('project')
-export class ProjectController
-{
-  constructor(private readonly projectService: ProjectService) { }
+@Controller('project') // ✅ plural
+export class ProjectController {
+  constructor(private readonly projectService: ProjectService) {}
 
   @Post()
   create(@Body() createProjectDto: CreateProjectDto)
