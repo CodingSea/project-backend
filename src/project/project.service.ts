@@ -44,6 +44,14 @@ export class ProjectService
       throw new NotFoundException(`Project ${id} not found`);
     }
 
+    // Sort services by deadline (ascending order)
+    project.services.sort((a, b) =>
+    {
+      const deadlineA = a.deadline ? new Date(a.deadline).getTime() : Infinity; // Handle undefined deadlines
+      const deadlineB = b.deadline ? new Date(b.deadline).getTime() : Infinity; // Handle undefined deadlines
+      return deadlineA - deadlineB; // Ascending order
+    });
+
     return project;
   }
 
