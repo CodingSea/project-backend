@@ -31,7 +31,7 @@ export class ProjectService
   {
     const project = await this.projectRepository.findOne({
       where: { projectID: id },
-      relations: [ 'services' ],
+      relations: [ 'services', 'services.taskBoard' ],
     });
 
     if (!project)
