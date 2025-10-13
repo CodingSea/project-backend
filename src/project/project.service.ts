@@ -31,13 +31,27 @@ export class ProjectService
   {
     const project = await this.projectRepository.findOne({
       where: { projectID: id },
-      relations: [ 'services' ],
+      relations: [ 'services',
+        'services.taskBoard',
+        'services.taskBoard.cards',
+        'services.projectManager',
+        'services.chief',
+        'services.backup',
+        'services.assignedResources' ],
     });
 
     if (!project)
     {
       throw new NotFoundException(`Project ${id} not found`);
     }
+
+    // Sort services by deadline (ascending order)
+    project.services.sort((a, b) =>
+    {
+      const deadlineA = a.deadline ? new Date(a.deadline).getTime() : Infinity; // Handle undefined deadlines
+      const deadlineB = b.deadline ? new Date(b.deadline).getTime() : Infinity; // Handle undefined deadlines
+      return deadlineA - deadlineB; // Ascending order
+    });
 
     return project;
   }

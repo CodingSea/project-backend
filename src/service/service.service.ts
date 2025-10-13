@@ -29,7 +29,10 @@ export class ServiceService
   async create(dto: CreateServiceDto): Promise<Service>
   {
     // Create the TaskBoard first
-    const taskBoard = this.taskBoardRepo.create({});
+    const taskBoard = this.taskBoardRepo.create({
+      service: { serviceID: 0 }, // Placeholder; will be updated after saving the Service
+      cards: [] // Initialize with an empty array of cards
+    });
 
     // Create the Service
     const svc = this.svcRepo.create({
@@ -71,9 +74,17 @@ export class ServiceService
       svc.assignedResources = resources;
     }
 
-    // Save both Service and TaskBoard
-    await this.svcRepo.save(svc); // This will cascade save the TaskBoard as well if defined
-    return svc;
+    // Save the Service first to get its ID
+    const savedService = await this.svcRepo.save(svc);
+
+    // Update the TaskBoard with the Service ID
+    taskBoard.service = savedService; // Associate the TaskBoard with the newly created Service
+
+    // Save the TaskBoard
+    await this.taskBoardRepo.save(taskBoard);
+
+    // Return the saved Service
+    return savedService;
   }
 
   // ✅ FETCH ALL
