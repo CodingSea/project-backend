@@ -16,7 +16,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { S3Service } from 'src/s3/s3.service';
 import { Express } from 'express'; // ✅ Added import for Express types
 
-@Controller('services')
+@Controller('service')
 export class ServiceController {
   constructor(
     private readonly serviceService: ServiceService,
@@ -27,31 +27,49 @@ export class ServiceController {
   @Post()
   @UseInterceptors(FilesInterceptor('files'))
   async createServiceWithFiles(
-    @Body() dto: CreateServiceDto,
-    @UploadedFiles() files: Express.Multer.File[], // ✅ Fixed typing
+    @Body() rawBody: any,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    // Step 1: Create the service entry in DB
+    console.log('📦 Incoming body:', rawBody);
+  
+    // ✅ Parse numbers and arrays safely
+    const dto: CreateServiceDto = {
+      name: rawBody.name,
+      description: rawBody.description,
+      deadline: rawBody.deadline,
+      projectId: Number(rawBody.projectId),
+      chiefId: Number(rawBody.chiefId),
+      managerId: Number(rawBody.managerId),
+      resources: Array.isArray(rawBody.resources)
+        ? rawBody.resources.map((r: any) => Number(r))
+        : rawBody.resources
+        ? [Number(rawBody.resources)]
+        : [],
+    };
+  
+    // Step 1: Create service in DB
     const service = await this.serviceService.create(dto);
-
-    // Step 2: Upload each file to S3 under folder /services/{id}/
+  
+    // Step 2: Upload files to S3
     const urls: string[] = [];
-    for (const file of files) {
+    for (const file of files || []) {
       const key = `services/${service.serviceID}/${Date.now()}-${file.originalname}`;
       const url = await this.s3Service.uploadBuffer(file.buffer, key);
       urls.push(url);
     }
-
-    // Step 3: Save attachment URLs in DB
+  
+    // Step 3: Save file URLs in DB
     if (urls.length > 0) {
       await this.serviceService.addAttachments(service.serviceID, urls);
     }
-
+  
     return {
       message: 'Service created successfully',
       service,
       attachments: urls,
     };
   }
+  
 
   @Get()
   findAll() {
