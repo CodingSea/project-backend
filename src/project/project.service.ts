@@ -29,11 +29,16 @@ export class ProjectService
 
   async findOne(id: number): Promise<Project>
   {
-    const project = await this.projectRepository.findOneBy({ projectID: id });
+    const project = await this.projectRepository.findOne({
+      where: { projectID: id },
+      relations: [ 'services' ],
+    });
+
     if (!project)
     {
       throw new NotFoundException(`Project ${id} not found`);
     }
+
     return project;
   }
 

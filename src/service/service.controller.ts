@@ -17,6 +17,7 @@ export class ServiceController
   @Get(':serviceId/tasks')
   async getCards(@Param('serviceId') serviceId: number): Promise<Card[]>
   {
+    console.log(`Fetching cards for service ID: ${serviceId}`);
     return this.tasksService.getCardsFromTaskBoard(serviceId);
   }
 
