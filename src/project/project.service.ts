@@ -33,6 +33,7 @@ export class ProjectService
       where: { projectID: id },
       relations: [ 'services',
         'services.taskBoard',
+        'services.taskBoard.cards',
         'services.projectManager',
         'services.chief',
         'services.backup',
