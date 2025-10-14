@@ -164,6 +164,7 @@ export class ServiceService
         .leftJoinAndSelect('service.projectManager', 'projectManager')
         .leftJoinAndSelect('service.assignedResources', 'assignedResources')
         .leftJoinAndSelect('service.backup', 'backup')
+        .leftJoinAndSelect('service.taskBoard', 'taskBoard')
         .where(
           'chief.id = :userId OR projectManager.id = :userId OR assignedResources.id = :userId OR backup.id = :userId',
           { userId }
