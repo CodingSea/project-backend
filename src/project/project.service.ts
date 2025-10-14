@@ -24,7 +24,19 @@ export class ProjectService
   // ✅ Get all projects
   findAll(): Promise<Project[]>
   {
-    return this.projectRepository.find();
+    return this.projectRepository.find(
+      {
+        relations: [
+          'services',
+          'services.taskBoard',
+          'services.taskBoard.cards',
+          'services.projectManager',
+          'services.chief',
+          'services.backup',
+          'services.assignedResources'
+        ]
+      }
+    );
   }
 
   async findOne(id: number): Promise<Project>
