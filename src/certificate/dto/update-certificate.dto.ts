@@ -4,29 +4,27 @@ export class UpdateCertificateDto
 {
     @IsNotEmpty()
     @IsString()
-    Name: string;
+    name: string;
 
     @IsNotEmpty()
     @IsString()
-    Type: string;
+    type: string;
 
     @IsNotEmpty()
     @IsString()
-    IssuingOrganization: string;
+    issuingOrganization: string;
 
     @IsNotEmpty()
     @IsDateString()
-    IssueDate: string;
+    issueDate: string;
 
     @IsNotEmpty()
     @IsDateString()
-    ExpiryDate: Date;
+    expiryDate: Date;
 
-    @IsNotEmpty()
     @IsString()
-    Description: string;
+    description: string;
 
-    @IsNotEmpty()
-    @IsString()
-    CertificateFile: string; // Assuming this is a URL or path to the file
+    // @IsString()
+    // CertificateFile: string; // Assuming this is a URL or path to the file
 }
