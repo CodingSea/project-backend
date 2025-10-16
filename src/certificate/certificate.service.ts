@@ -43,7 +43,7 @@ export class CertificateService
 
   async findAll()
   {
-    return await this.certificateRepository.find({ relations: ["userId"] });
+    return await this.certificateRepository.find({ relations: ["userId"], order: {createdAt: 'DESC'} });
   }
 
   findOne(id: number)
