@@ -2,6 +2,7 @@ import { Controller, Post, Get, Param, Body, Delete, Patch } from '@nestjs/commo
 import { TasksService } from './tasks.service';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Card } from 'src/card/entities/card.entity';
+import { CreateCardDto } from 'src/card/dto/create-card.dto';
 
 @Controller('tasks')
 export class TasksController
@@ -44,16 +45,12 @@ export class TasksController
     }
 
     // Create a Card
-    @Post('task-board/:taskBoardId/cards')
+    @Post(':taskBoardId/cards')
     async createCard(
         @Param('taskBoardId') taskBoardId: number,
-        @Body('serviceId') serviceId: number,
-        @Body('column') column: string,
-        @Body('title') title: string,
-        @Body('description') description: string
-    ): Promise<Card>
-    {
-        return this.tasksService.createCard(taskBoardId, serviceId, column, title, description);
+        @Body() createCardDto: CreateCardDto // Accept the DTO directly
+    ): Promise<Card> {
+        return this.tasksService.createCard(taskBoardId, createCardDto);
     }
 
     // Get All Cards for a TaskBoard
