@@ -140,12 +140,6 @@ export class TasksService
         {
             const { title, column, description, tags, order } = createCardDto;
 
-            const existingCard = await this.cardRepository.findOne({ where: { title, taskBoard: { id: taskBoardId } } });
-            if (existingCard)
-            {
-                throw new ConflictException(`Card with title "${title}" already exists in this task board`);
-            }
-
             const taskBoard = await this.taskBoardRepository.findOne({ where: { id: taskBoardId } });
             if (!taskBoard)
             {
