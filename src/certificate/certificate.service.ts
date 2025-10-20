@@ -41,9 +41,9 @@ export class CertificateService
     return await this.certificateRepository.find({ where: { userId: { id: userId } } });
   }
 
-  findAll()
+  async findAll()
   {
-    return `This action returns all certificate`;
+    return await this.certificateRepository.find({ relations: ["userId"], order: {createdAt: 'DESC'} });
   }
 
   findOne(id: number)

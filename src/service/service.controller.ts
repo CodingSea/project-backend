@@ -135,9 +135,13 @@ export class ServiceController
   }
 
   @Patch(':taskBoardId/tasks/:cardId')
-  async updateCard(@Param('cardId') cardId: number, @Body() updateCardDto: UpdateCardDto): Promise<Card>
+  async updateCard(
+    @Param('taskBoardId') taskBoardId: number,
+    @Param('cardId') cardId: number,
+    @Body() updateCardDto: UpdateCardDto // Accept the DTO directly
+  ): Promise<Card>
   {
-    return this.tasksService.updateCard(cardId, updateCardDto);
+    return this.tasksService.updateCard(taskBoardId, cardId, updateCardDto);
   }
 
   @Delete(':taskBoardId/tasks/:cardId')

@@ -1,10 +1,11 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateCardDto } from './create-card.dto';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Comment } from "src/comment/entities/comment.entity";
 
 export class UpdateCardDto
 {
+
     @IsNotEmpty()
     @IsString()
     column: string;
@@ -23,4 +24,8 @@ export class UpdateCardDto
     tags: string[];
 
     comments: Comment[];
+
+    @IsNotEmpty()
+    @IsNumber()
+    order: number;
 }

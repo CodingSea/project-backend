@@ -1,8 +1,9 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 @Entity()
-export class Certificate {
+export class Certificate
+{
     @PrimaryGeneratedColumn()
     certificateID: number;
 
@@ -29,4 +30,7 @@ export class Certificate {
 
     @Column({ type: 'varchar', nullable: true })
     certificateFile: string;
+
+    @CreateDateColumn()
+    createdAt: Date;
 }
