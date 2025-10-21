@@ -7,26 +7,26 @@ export class Certificate
     @PrimaryGeneratedColumn()
     certificateID: number;
 
-    @ManyToOne(() => User, user => user.certificates)
-    userId: User;
+  @ManyToOne(() => User, user => user.certificates)
+  user: User;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column()
-    type: string;
+  @Column()
+  type: string;
 
-    @Column()
-    issuingOrganization: string;
+  @Column()
+  issuingOrganization: string;
 
-    @Column()
-    issueDate: Date;
+  @Column()
+  issueDate: Date;
 
-    @Column()
-    expiryDate: Date;
+  @Column()
+  expiryDate: Date;
 
-    @Column({ nullable: true })
-    description: string;
+  @Column({ nullable: true })
+  description: string;
 
     @Column({ type: 'varchar', nullable: true })
     certificateFile: string;

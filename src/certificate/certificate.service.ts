@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCertificateDto } from './dto/create-certificate.dto';
 import { UpdateCertificateDto } from './dto/update-certificate.dto';
 import { Certificate } from './entities/certificate.entity';
@@ -7,57 +7,58 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
-export class CertificateService
-{
+export class CertificateService {
   constructor(
     @InjectRepository(Certificate)
     private readonly certificateRepository: Repository<Certificate>,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
-  ) { }
+  ) {}
 
-  async create(certificateDto: CreateCertificateDto, userId: number): Promise<Certificate>
-  {
-    // Fetch the user entity
+  //  Create Certificate
+  async create(
+    dto: CreateCertificateDto,
+    userId: number,
+    fileUrls: string[] = []
+  ): Promise<Certificate> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
 
-    if (!user)
-    {
-      throw new Error('User not found');
-    }
-
-    // Create a new certificate and associate it with the user
     const certificate = this.certificateRepository.create({
-      ...certificateDto,
-      userId: user
+      ...dto,
+      user,
+      certificateFile: fileUrls.length ? fileUrls : [],
     });
 
     return await this.certificateRepository.save(certificate);
   }
 
-  async getCertificatesByUserId(userId: number): Promise<Certificate[]>
-  {
-    return await this.certificateRepository.find({ where: { userId: { id: userId } } });
+  //  Get all certificates for a specific user
+  async getCertificatesByUserId(userId: number): Promise<Certificate[]> {
+    return await this.certificateRepository.find({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
   }
 
-  async findAll()
-  {
-    return await this.certificateRepository.find({ relations: ["userId"], order: {createdAt: 'DESC'} });
+  findAll() {
+    return this.certificateRepository.find({ relations: ['user'] });
   }
 
-  findOne(id: number)
-  {
-    return `This action returns a #${id} certificate`;
+  //  Update certificate info
+  async update(id: number, dto: UpdateCertificateDto): Promise<Certificate> {
+    const cert = await this.certificateRepository.findOne({
+      where: { certificateID: id },
+    });
+    if (!cert) throw new NotFoundException(`Certificate ${id} not found`);
+
+    Object.assign(cert, dto);
+    return this.certificateRepository.save(cert);
   }
 
-  update(id: number, updateCertificateDto: UpdateCertificateDto)
-  {
-    return `This action updates a #${id} certificate`;
-  }
-
-  remove(id: number)
-  {
-    return `This action removes a #${id} certificate`;
+  //  Delete certificate
+  async remove(id: number): Promise<void> {
+    await this.certificateRepository.delete(id);
   }
 }
