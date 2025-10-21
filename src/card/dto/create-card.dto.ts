@@ -24,4 +24,8 @@ export class CreateCardDto
     @IsNotEmpty()
     @IsNumber()
     order: number;
+
+    @IsOptional()
+    @IsString()
+    color: string;
 }

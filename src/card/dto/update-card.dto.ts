@@ -28,4 +28,8 @@ export class UpdateCardDto
     @IsNotEmpty()
     @IsNumber()
     order: number;
+
+    @IsOptional()
+    @IsString()
+    color: string;
 }

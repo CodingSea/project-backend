@@ -97,9 +97,14 @@ export class TasksService
             throw new NotFoundException(`Task board for service ID ${serviceId} not found`);
         }
 
-        console.log(taskBoard.cards);
-
-        return taskBoard.cards; // Return the cards from the found task board
+        if(taskBoard.cards.length > 0)
+        {
+            return taskBoard.cards;
+        }
+        else
+        {
+            return [];
+        }
     }
 
     async updateCard(taskBoardId: number, cardId: number, updateCardDto: UpdateCardDto): Promise<Card> {
@@ -129,6 +134,9 @@ export class TasksService
         if (updateCardDto.order !== undefined) {
             card.order = updateCardDto.order;
         }
+        if (updateCardDto.color !== undefined) {
+            card.color = updateCardDto.color;
+        }
     
         return await this.cardRepository.save(card);
     }
@@ -138,7 +146,7 @@ export class TasksService
     {
         try
         {
-            const { title, column, description, tags, order } = createCardDto;
+            const { title, column, description, tags, order, color } = createCardDto;
 
             const taskBoard = await this.taskBoardRepository.findOne({ where: { id: taskBoardId } });
             if (!taskBoard)
@@ -147,7 +155,7 @@ export class TasksService
             }
 
             // Create and save the new card
-            const newCard = this.cardRepository.create({ title, column, description, taskBoard, tags, order });
+            const newCard = this.cardRepository.create({ title, column, description, taskBoard, tags, order, color });
             return await this.cardRepository.save(newCard);
         } catch (error)
         {
