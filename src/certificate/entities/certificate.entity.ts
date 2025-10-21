@@ -3,30 +3,30 @@ import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Certificate {
-    @PrimaryGeneratedColumn()
-    certificateID: number;
+  @PrimaryGeneratedColumn()
+  certificateID: number;
 
-    @ManyToOne(() => User, user => user.certificates)
-    userId: User;
+  @ManyToOne(() => User, user => user.certificates)
+  user: User;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column()
-    type: string;
+  @Column()
+  type: string;
 
-    @Column()
-    issuingOrganization: string;
+  @Column()
+  issuingOrganization: string;
 
-    @Column()
-    issueDate: Date;
+  @Column()
+  issueDate: Date;
 
-    @Column()
-    expiryDate: Date;
+  @Column()
+  expiryDate: Date;
 
-    @Column({ nullable: true })
-    description: string;
+  @Column({ nullable: true })
+  description: string;
 
-    @Column({ type: 'varchar', nullable: true })
-    certificateFile: string;
+  @Column({ type: 'text', array: true, nullable: true })
+  certificateFile: string[];
 }
