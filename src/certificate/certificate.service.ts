@@ -7,47 +7,52 @@ import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
-export class CertificateService {
+export class CertificateService
+{
   constructor(
     @InjectRepository(Certificate)
     private readonly certificateRepository: Repository<Certificate>,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
-  ) {}
+  ) { }
 
   //  Create Certificate
   async create(
     dto: CreateCertificateDto,
     userId: number,
     fileUrls: string[] = []
-  ): Promise<Certificate> {
+  ): Promise<Certificate>
+  {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const certificate = this.certificateRepository.create({
       ...dto,
-      user,
-      certificateFile: fileUrls.length ? fileUrls : [],
+      user: user,
+      certificateFile: fileUrls.length ? fileUrls : []
     });
 
     return await this.certificateRepository.save(certificate);
   }
 
   //  Get all certificates for a specific user
-  async getCertificatesByUserId(userId: number): Promise<Certificate[]> {
+  async getCertificatesByUserId(userId: number): Promise<Certificate[]>
+  {
     return await this.certificateRepository.find({
       where: { user: { id: userId } },
-      relations: ['user'],
+      relations: [ 'user' ],
     });
   }
 
-  findAll() {
-    return this.certificateRepository.find({ relations: ['user'] });
+  findAll()
+  {
+    return this.certificateRepository.find({ relations: [ 'user' ] });
   }
 
   //  Update certificate info
-  async update(id: number, dto: UpdateCertificateDto): Promise<Certificate> {
+  async update(id: number, dto: UpdateCertificateDto): Promise<Certificate>
+  {
     const cert = await this.certificateRepository.findOne({
       where: { certificateID: id },
     });
@@ -58,7 +63,8 @@ export class CertificateService {
   }
 
   //  Delete certificate
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<void>
+  {
     await this.certificateRepository.delete(id);
   }
 }

@@ -4,8 +4,8 @@ import { User } from 'src/user/entities/user.entity';
 @Entity()
 export class Certificate
 {
-    @PrimaryGeneratedColumn()
-    certificateID: number;
+  @PrimaryGeneratedColumn()
+  certificateID: number;
 
   @ManyToOne(() => User, user => user.certificates)
   user: User;
@@ -28,9 +28,9 @@ export class Certificate
   @Column({ nullable: true })
   description: string;
 
-    @Column({ type: 'varchar', nullable: true })
-    certificateFile: string;
+  @Column('text', { array: true, nullable: true }) // If you're storing multiple files
+  certificateFile: string[];
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 }
