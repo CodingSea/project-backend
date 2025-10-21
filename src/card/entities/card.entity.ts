@@ -28,4 +28,7 @@ export class Card
 
     @Column({ nullable: true })
     order: number;
+
+    @Column({ nullable: true })
+    color: string;
 }
