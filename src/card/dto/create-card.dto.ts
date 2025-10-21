@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { Comment } from "src/comment/entities/comment.entity";
 
 export class CreateCardDto 
@@ -20,4 +20,12 @@ export class CreateCardDto
     tags: string[];
 
     @IsOptional() comments?: Comment[];
+
+    @IsNotEmpty()
+    @IsNumber()
+    order: number;
+
+    @IsOptional()
+    @IsString()
+    color: string;
 }

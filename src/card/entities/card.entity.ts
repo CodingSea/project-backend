@@ -24,5 +24,11 @@ export class Card
     taskBoard: TaskBoard;
 
     @Column('varchar', { array: true, nullable: true })
-    tags: string[]; 
+    tags: string[];
+
+    @Column({ nullable: true })
+    order: number;
+
+    @Column({ nullable: true })
+    color: string;
 }

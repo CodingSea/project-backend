@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
+import { UpdateCardDto } from 'src/card/dto/update-card.dto';
 import { Card } from 'src/card/entities/card.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Repository } from 'typeorm';
@@ -33,7 +34,7 @@ export class TasksService
     {
         return await this.taskBoardRepository.findOne({
             where: { id: id },
-            relations: [ 'cards' ]
+            relations: [ 'cards', 'service', 'service.chief', 'service.projectManager' ]
         });
     }
 
@@ -51,19 +52,30 @@ export class TasksService
     }
 
     // Create Card
-    async createCard(taskBoardId: number, serviceId: number, column: string, title: string, description: string): Promise<Card>
+    async createCard(taskBoardId: number, createCardDto: CreateCardDto): Promise<Card>
     {
+        const { column, title, description, tags, order } = createCardDto; // Destructure from DTO
+
         const taskBoard = await this.taskBoardRepository.findOne({
             where: { id: taskBoardId },
             relations: [ 'service' ] // Fetch the associated service
         });
 
-        if (!taskBoard || taskBoard.service?.serviceID !== serviceId)
+        if (!taskBoard)
         {
             throw new Error('TaskBoard not found or does not belong to the specified Service ID');
         }
 
-        const card = this.cardRepository.create({ column, title, description, taskBoard });
+        // Create the card using the DTO data
+        const card = this.cardRepository.create({
+            column,
+            title,
+            description,
+            taskBoard,
+            tags, // Assuming you want to include tags as well
+            order // Include order if needed
+        });
+
         return await this.cardRepository.save(card);
     }
 
@@ -85,41 +97,71 @@ export class TasksService
             throw new NotFoundException(`Task board for service ID ${serviceId} not found`);
         }
 
-        return taskBoard.cards; // Return the cards from the found task board
+        if(taskBoard.cards.length > 0)
+        {
+            return taskBoard.cards;
+        }
+        else
+        {
+            return [];
+        }
     }
 
-    async updateCard(id: number, updateData: Partial<Card>): Promise<Card>
-    {
-        const card = await this.cardRepository.findOne({ where: { id } });
-        if (!card)
-        {
-            throw new NotFoundException(`Card with ID ${id} not found`);
+    async updateCard(taskBoardId: number, cardId: number, updateCardDto: UpdateCardDto): Promise<Card> {
+        const taskBoard = await this.taskBoardRepository.findOne({where: {id: taskBoardId}});
+        if (!taskBoard) {
+            throw new Error('Task Board not found');
         }
-
-        // Update the card fields
-        Object.assign(card, updateData);
+    
+        const card = await this.cardRepository.findOne({ where: { id: cardId, taskBoard: { id: taskBoardId } } });
+        if (!card) {
+            throw new Error('Card not found');
+        }
+    
+        // Update only the fields that are provided in the DTO
+        if (updateCardDto.column !== undefined) {
+            card.column = updateCardDto.column;
+        }
+        if (updateCardDto.title !== undefined) {
+            card.title = updateCardDto.title;
+        }
+        if (updateCardDto.description !== undefined) {
+            card.description = updateCardDto.description;
+        }
+        if (updateCardDto.tags !== undefined) {
+            card.tags = updateCardDto.tags;
+        }
+        if (updateCardDto.order !== undefined) {
+            card.order = updateCardDto.order;
+        }
+        if (updateCardDto.color !== undefined) {
+            card.color = updateCardDto.color;
+        }
+    
         return await this.cardRepository.save(card);
     }
 
     // Create a card (if it doesn't exist)
     async createCardIfNotExists(taskBoardId: number, createCardDto: CreateCardDto): Promise<Card>
     {
-        const { title, column, description, tags } = createCardDto;
-
-        const existingCard = await this.cardRepository.findOne({ where: { title, taskBoard: { id: taskBoardId } } });
-        if (existingCard)
+        try
         {
-            throw new ConflictException(`Card with title "${title}" already exists in this task board`);
-        }
+            const { title, column, description, tags, order, color } = createCardDto;
 
-        const taskBoard = await this.taskBoardRepository.findOne({ where: { id: taskBoardId } });
-        if (!taskBoard)
+            const taskBoard = await this.taskBoardRepository.findOne({ where: { id: taskBoardId } });
+            if (!taskBoard)
+            {
+                throw new NotFoundException(`Task board with ID ${taskBoardId} not found`);
+            }
+
+            // Create and save the new card
+            const newCard = this.cardRepository.create({ title, column, description, taskBoard, tags, order, color });
+            return await this.cardRepository.save(newCard);
+        } catch (error)
         {
-            throw new NotFoundException(`Task board with ID ${taskBoardId} not found`);
+            console.error('Error creating card:', error); // Log the error for debugging
+            throw error; // Re-throw to maintain original error handling
         }
-
-        const newCard = this.cardRepository.create({ title, column, description, taskBoard, tags });
-        return await this.cardRepository.save(newCard);
     }
 
     async deleteCard(cardId: number): Promise<void>

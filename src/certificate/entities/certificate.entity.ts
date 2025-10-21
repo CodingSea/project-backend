@@ -1,10 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
 @Entity()
-export class Certificate {
-  @PrimaryGeneratedColumn()
-  certificateID: number;
+export class Certificate
+{
+    @PrimaryGeneratedColumn()
+    certificateID: number;
 
   @ManyToOne(() => User, user => user.certificates)
   user: User;
@@ -27,6 +28,9 @@ export class Certificate {
   @Column({ nullable: true })
   description: string;
 
-  @Column({ type: 'text', array: true, nullable: true })
-  certificateFile: string[];
+    @Column({ type: 'varchar', nullable: true })
+    certificateFile: string;
+
+    @CreateDateColumn()
+    createdAt: Date;
 }
