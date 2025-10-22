@@ -65,7 +65,7 @@ export class Service
     @OneToMany(() => Comment, (comment) => comment.service, { cascade: true })
     comments: Comment[];
 
-    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true },)
+    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true, nullable: true },)
     @JoinColumn() // This makes Service the owner of the relationship
     taskBoard: TaskBoard;
 

@@ -175,14 +175,20 @@ export class ServiceService
   // ✅ DELETE
   async remove(id: number): Promise<void>
   {
-    const taskboard = await this.taskBoardRepo.findOne({ where: { service: { serviceID: id } } })
-    console.log(taskboard);
-    if(taskboard)
+    const service = await this.svcRepo.findOne({ where: { serviceID: id }, relations: [ 'taskBoard' ] });
+    if (!service)
     {
-      this.tasksService.deleteTaskBoard(taskboard.id);
+      throw new NotFoundException('Service not found');
     }
 
-    await this.svcRepo.delete(id);
+    // Remove the service first
+    await this.svcRepo.remove(service);
+
+    // Then remove the associated TaskBoard if it exists
+    if (service.taskBoard)
+    {
+      await this.taskBoardRepo.remove(service.taskBoard);
+    }
   }
 
   // ✅ Save attachment URLs for a specific service

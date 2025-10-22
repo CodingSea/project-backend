@@ -121,7 +121,7 @@ export class ServiceController
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: number)
+  remove(@Param('id') id: string)
   {
     return this.serviceService.remove(+id);
   }
