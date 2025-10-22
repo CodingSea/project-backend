@@ -7,6 +7,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { Project } from 'src/project/entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
+import { TasksService } from 'src/tasks/tasks.service';
 
 @Injectable()
 export class ServiceService
@@ -23,6 +24,8 @@ export class ServiceService
 
     @InjectRepository(TaskBoard)
     private taskBoardRepo: Repository<TaskBoard>,
+
+    private readonly tasksService: TasksService,
   ) { }
 
   // ✅ CREATE SERVICE
@@ -172,6 +175,13 @@ export class ServiceService
   // ✅ DELETE
   async remove(id: number): Promise<void>
   {
+    const taskboard = await this.taskBoardRepo.findOne({ where: { service: { serviceID: id } } })
+    console.log(taskboard);
+    if(taskboard)
+    {
+      this.tasksService.deleteTaskBoard(taskboard.id);
+    }
+
     await this.svcRepo.delete(id);
   }
 

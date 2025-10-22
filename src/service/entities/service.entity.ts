@@ -1,15 +1,15 @@
 import
-{
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    ManyToMany,
-    JoinTable,
-    OneToMany,
-    OneToOne,
-    JoinColumn,
-} from 'typeorm';
+    {
+        Entity,
+        PrimaryGeneratedColumn,
+        Column,
+        ManyToOne,
+        ManyToMany,
+        JoinTable,
+        OneToMany,
+        OneToOne,
+        JoinColumn,
+    } from 'typeorm';
 import { Project } from 'src/project/entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
@@ -65,7 +65,8 @@ export class Service
     @OneToMany(() => Comment, (comment) => comment.service, { cascade: true })
     comments: Comment[];
 
-    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true })
+    @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true },)
+    @JoinColumn() // This makes Service the owner of the relationship
     taskBoard: TaskBoard;
 
     @Column('text', { array: true, nullable: true })

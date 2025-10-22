@@ -11,7 +11,7 @@ export class TasksService
 {
     constructor(
         @InjectRepository(TaskBoard)
-        private taskBoardRepository: Repository<TaskBoard>,
+        private taskboardRepository: Repository<TaskBoard>,
         @InjectRepository(Card)
         private cardRepository: Repository<Card>,
     ) { }
@@ -19,20 +19,20 @@ export class TasksService
     // Create TaskBoard
     async createTaskBoard(id: number): Promise<TaskBoard>
     {
-        const taskBoard = this.taskBoardRepository.create({ id });
-        return await this.taskBoardRepository.save(taskBoard);
+        const taskBoard = this.taskboardRepository.create({ id });
+        return await this.taskboardRepository.save(taskBoard);
     }
 
     // Get All TaskBoards
     async findAllTaskBoards(): Promise<TaskBoard[]>
     {
-        return await this.taskBoardRepository.find({ relations: [ 'cards' ] });
+        return await this.taskboardRepository.find({ relations: [ 'cards' ] });
     }
 
     // Get TaskBoard by ID
     async findTaskBoardById(id: number): Promise<TaskBoard | null>
     {
-        return await this.taskBoardRepository.findOne({
+        return await this.taskboardRepository.findOne({
             where: { id: id },
             relations: [ 'cards', 'service', 'service.chief', 'service.projectManager' ]
         });
@@ -41,14 +41,14 @@ export class TasksService
     // Update TaskBoard
     async updateTaskBoard(id: number, serviceID: number): Promise<TaskBoard | null>
     {
-        await this.taskBoardRepository.update(id, { id });
+        await this.taskboardRepository.update(id, { id });
         return this.findTaskBoardById(id);
     }
 
     // Delete TaskBoard
     async deleteTaskBoard(id: number): Promise<void>
     {
-        await this.taskBoardRepository.delete(id);
+        await this.taskboardRepository.delete(id);
     }
 
     // Create Card
@@ -56,7 +56,7 @@ export class TasksService
     {
         const { column, title, description, tags, order } = createCardDto; // Destructure from DTO
 
-        const taskBoard = await this.taskBoardRepository.findOne({
+        const taskBoard = await this.taskboardRepository.findOne({
             where: { id: taskBoardId },
             relations: [ 'service' ] // Fetch the associated service
         });
@@ -87,57 +87,63 @@ export class TasksService
 
     async getCardsFromTaskBoard(serviceId: number): Promise<Card[]>
     {
-        const taskBoard = await this.taskBoardRepository.findOne({
-            where: { service: { serviceID: serviceId } },
-            relations: [ 'cards' ], // Ensure to load the relation
+        console.log('Service ID:', serviceId);
+
+        const taskboard = await this.taskboardRepository.findOne({
+            where: { service: { serviceID: serviceId } }, // Ensure this path is correct
+            relations: [ 'cards' ], // Load the cards relation
         });
 
-        if (!taskBoard)
+        console.log('Taskboard:', taskboard);
+
+        if (!taskboard)
         {
             throw new NotFoundException(`Task board for service ID ${serviceId} not found`);
         }
 
-        if(taskBoard.cards.length > 0)
-        {
-            return taskBoard.cards;
-        }
-        else
-        {
-            return [];
-        }
+        return taskboard.cards || []; // Return cards or an empty array
     }
 
-    async updateCard(taskBoardId: number, cardId: number, updateCardDto: UpdateCardDto): Promise<Card> {
-        const taskBoard = await this.taskBoardRepository.findOne({where: {id: taskBoardId}});
-        if (!taskBoard) {
+    async updateCard(taskBoardId: number, cardId: number, updateCardDto: UpdateCardDto): Promise<Card>
+    {
+        const taskBoard = await this.taskboardRepository.findOne({ where: { id: taskBoardId } });
+        if (!taskBoard)
+        {
             throw new Error('Task Board not found');
         }
-    
+
         const card = await this.cardRepository.findOne({ where: { id: cardId, taskBoard: { id: taskBoardId } } });
-        if (!card) {
+        if (!card)
+        {
             throw new Error('Card not found');
         }
-    
+
         // Update only the fields that are provided in the DTO
-        if (updateCardDto.column !== undefined) {
+        if (updateCardDto.column !== undefined)
+        {
             card.column = updateCardDto.column;
         }
-        if (updateCardDto.title !== undefined) {
+        if (updateCardDto.title !== undefined)
+        {
             card.title = updateCardDto.title;
         }
-        if (updateCardDto.description !== undefined) {
+        if (updateCardDto.description !== undefined)
+        {
             card.description = updateCardDto.description;
         }
-        if (updateCardDto.tags !== undefined) {
+        if (updateCardDto.tags !== undefined)
+        {
             card.tags = updateCardDto.tags;
         }
-        if (updateCardDto.order !== undefined) {
+        if (updateCardDto.order !== undefined)
+        {
             card.order = updateCardDto.order;
         }
-        if (updateCardDto.color !== undefined) {
+        if (updateCardDto.color !== undefined)
+        {
             card.color = updateCardDto.color;
         }
-    
+
         return await this.cardRepository.save(card);
     }
 
@@ -148,7 +154,7 @@ export class TasksService
         {
             const { title, column, description, tags, order, color } = createCardDto;
 
-            const taskBoard = await this.taskBoardRepository.findOne({ where: { id: taskBoardId } });
+            const taskBoard = await this.taskboardRepository.findOne({ where: { id: taskBoardId } });
             if (!taskBoard)
             {
                 throw new NotFoundException(`Task board with ID ${taskBoardId} not found`);

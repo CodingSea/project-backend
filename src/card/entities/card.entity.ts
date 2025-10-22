@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 
@@ -20,7 +20,7 @@ export class Card
     @OneToMany(() => Comment, (comment) => comment.card, { cascade: true })
     comments: Comment[];
 
-    @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards)
+    @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards, { onDelete: 'CASCADE' })
     taskBoard: TaskBoard;
 
     @Column('varchar', { array: true, nullable: true })
