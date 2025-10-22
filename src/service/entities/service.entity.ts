@@ -67,4 +67,7 @@ export class Service
 
     @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, { cascade: true })
     taskBoard: TaskBoard;
+
+    @Column('text', { array: true, nullable: true })
+    serviceFile: string[];
 }

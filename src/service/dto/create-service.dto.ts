@@ -32,6 +32,7 @@ import {
     chiefId: number;
   
     @IsInt()
+    @IsOptional()
     managerId: number;
   
     // ✅ The array of resource IDs (keep name consistent with frontend)

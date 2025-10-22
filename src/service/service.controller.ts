@@ -58,8 +58,6 @@ export class ServiceController
     @UploadedFiles() files: Express.Multer.File[],
   )
   {
-    console.log('📦 Incoming body:', rawBody);
-
     // ✅ Parse numbers and arrays safely
     const dto: CreateServiceDto = {
       name: rawBody.name,
@@ -78,25 +76,28 @@ export class ServiceController
     // Step 1: Create service in DB
     const service = await this.serviceService.create(dto);
 
-    // Step 2: Upload files to S3
+    // Step 2: Upload files to S3 (optional)
     const urls: string[] = [];
-    for (const file of files || [])
+    if (files && files.length > 0)
     {
-      const key = `services/${service.serviceID}/${Date.now()}-${file.originalname}`;
-      const url = await this.s3Service.uploadBuffer(file.buffer, key);
-      urls.push(url);
-    }
+      for (const file of files)
+      {
+        const key = `services/${service.serviceID}/${Date.now()}-${file.originalname}`;
+        const url = await this.s3Service.uploadBuffer(file.buffer, key);
+        urls.push(url);
+      }
 
-    // Step 3: Save file URLs in DB
-    if (urls.length > 0)
-    {
-      await this.serviceService.addAttachments(service.serviceID, urls);
+      // Step 3: Save file URLs in DB if there are any
+      if (urls.length > 0)
+      {
+        await this.serviceService.addAttachments(service.serviceID, urls);
+      }
     }
 
     return {
       message: 'Service created successfully',
       service,
-      attachments: urls,
+      attachments: urls.length > 0 ? urls : undefined, // Return attachments if they exist
     };
   }
 
