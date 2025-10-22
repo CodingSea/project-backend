@@ -28,8 +28,6 @@ export class ServiceService
   // ✅ CREATE SERVICE
   async create(dto: CreateServiceDto): Promise<Service>
   {
-
-
     // Create the Service
     const svc = this.svcRepo.create({
       name: dto.name,
@@ -69,10 +67,13 @@ export class ServiceService
       svc.assignedResources = resources;
     }
 
+    // ✅ Create TaskBoard
+    const taskBoard = new TaskBoard(); // Initialize a new TaskBoard instance
+    taskBoard.service = svc; // Set the reference to the service
+    svc.taskBoard = taskBoard; // Assign it to the service
+
     // Save the Service first to get its ID
     const savedService = await this.svcRepo.save(svc);
-
-
 
     // Return the saved Service
     return savedService;
