@@ -8,7 +8,7 @@ export class TaskBoard
     @PrimaryGeneratedColumn()
     id: number;
 
-    @OneToOne(() => Service, (service) => service.taskBoard)
+    @OneToOne(() => Service, (service) => service.taskBoard, { onDelete: 'CASCADE', nullable: true })
     service: Service;
 
     @OneToMany(() => Card, (card) => card.taskBoard, { cascade: true })

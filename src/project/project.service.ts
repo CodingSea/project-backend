@@ -5,13 +5,16 @@ import { Project } from './entities/project.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { ServiceService } from 'src/service/service.service';
+import { Service } from 'src/service/entities/service.entity';
 
 @Injectable()
 export class ProjectService
 {
   constructor(
     @InjectRepository(Project)
-    private readonly projectRepository: Repository<Project>, // ✅ renamed
+    private readonly projectRepository: Repository<Project>,
+    private readonly serviceRepository: ServiceService
   ) { }
 
   // ✅ Create new project
@@ -22,7 +25,7 @@ export class ProjectService
   }
 
   // ✅ Get all projects
-  findAll(): Promise<Project[]>
+  async findAll(): Promise<Project[]>
   {
     return this.projectRepository.find(
       {
@@ -85,6 +88,23 @@ export class ProjectService
   // ✅ Delete project
   async remove(id: number): Promise<void>
   {
+    const project = await this.projectRepository.findOne({
+      where: { projectID: id },
+      relations: [ 'services' ], // Load services for the project
+    });
+
+    if (!project)
+    {
+      throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+
+    // Delete associated services
+    for (const service of project.services)
+    {
+      await this.serviceRepository.remove(service.serviceID); // Assuming service has an `id` property
+    }
+
+    // Now delete the project itself
     await this.projectRepository.delete(id);
   }
 }
