@@ -12,14 +12,8 @@ export class Project {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'date', nullable: true })
-  dueDate: Date;
-
   @Column({ type: 'varchar', length: 50, nullable: true })
   status: string;
-
-  @Column({ type: 'int', default: 0 })
-  progress: number;
 
   @OneToMany(() => Service, (service) => service.project, { cascade: true })
   services: Service[];
