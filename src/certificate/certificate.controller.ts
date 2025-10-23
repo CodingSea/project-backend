@@ -1,14 +1,15 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
+import
+  {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    UploadedFiles,
+    UseInterceptors,
+  } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CertificateService } from './certificate.service';
 import { CreateCertificateDto } from './dto/create-certificate.dto';
@@ -18,11 +19,12 @@ import { S3Service } from 'src/s3/s3.service';
 import { Express } from 'express';
 
 @Controller('certificate')
-export class CertificateController {
+export class CertificateController
+{
   constructor(
     private readonly certificateService: CertificateService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   //  Create certificate with file uploads
   @Post(':userId')
@@ -31,11 +33,14 @@ export class CertificateController {
     @Param('userId') userId: number,
     @UploadedFiles() files: Express.Multer.File[],
     @Body() createCertificateDto: CreateCertificateDto
-  ): Promise<Certificate> {
+  ): Promise<Certificate>
+  {
     let fileUrls: string[] = [];
 
-    if (files && files.length > 0) {
-      const uploadPromises = files.map(async (file) => {
+    if (files && files.length > 0)
+    {
+      const uploadPromises = files.map(async (file) =>
+      {
         const key = `certificates/${Date.now()}-${file.originalname}`;
         return await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
       });
@@ -46,22 +51,26 @@ export class CertificateController {
   }
 
   @Get()
-  findAll() {
+  findAll()
+  {
     return this.certificateService.findAll();
   }
 
   @Get(':userId')
-  async getCertificates(@Param('userId') userId: number): Promise<Certificate[]> {
+  async getCertificates(@Param('userId') userId: number): Promise<Certificate[]>
+  {
     return await this.certificateService.getCertificatesByUserId(userId);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCertificateDto: UpdateCertificateDto) {
+  update(@Param('id') id: string, @Body() updateCertificateDto: UpdateCertificateDto)
+  {
     return this.certificateService.update(+id, updateCertificateDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number)
+  {
     return this.certificateService.remove(+id);
   }
 }
