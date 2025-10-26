@@ -16,7 +16,7 @@ export class S3Service {
     this.s3 = new AWS.S3();
   }
 
-  // Upload local file path (for other modules)
+  //  Upload file from local path
   async uploadFile(localFilePath: string, folder = 'uploads') {
     const fileContent = fs.readFileSync(localFilePath);
     const fileExt = path.extname(localFilePath);
@@ -32,7 +32,7 @@ export class S3Service {
     return `https://${this.bucketName}.s3.me-south-1.amazonaws.com/${key}`;
   }
 
-  // Upload directly from buffer (used for profile/certificate uploads)
+  //  Upload directly from buffer (used for profile/certificate uploads)
   async uploadBuffer(fileBuffer: Buffer, key: string, contentType?: string): Promise<string> {
     const params: AWS.S3.PutObjectRequest = {
       Bucket: this.bucketName,
@@ -42,10 +42,10 @@ export class S3Service {
     };
 
     await this.s3.upload(params).promise();
-    return key; // store only the key, not the full URL
+    return key;
   }
 
-  // ✅ Generate a pre-signed URL for reading private files
+  //  Generate pre-signed URL for private file access
   async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
     const params = {
       Bucket: this.bucketName,
@@ -53,5 +53,21 @@ export class S3Service {
       Expires: expiresInSeconds,
     };
     return this.s3.getSignedUrlPromise('getObject', params);
+  }
+
+  //  Delete file from S3
+  async deleteFile(key: string): Promise<void> {
+    try {
+      await this.s3
+        .deleteObject({
+          Bucket: this.bucketName,
+          Key: key,
+        })
+        .promise();
+      console.log('🗑️ Deleted from S3:', key);
+    } catch (err) {
+      console.error('❌ Failed to delete from S3:', err);
+      throw new Error('Failed to delete from S3');
+    }
   }
 }
