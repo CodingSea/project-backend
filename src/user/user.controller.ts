@@ -23,51 +23,51 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
   ) {}
 
-  // ✅ Create User
+  //  Create User
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
     return this.userService.create(createUserDto);
   }
 
-  // ✅ Get All Users
+  // Get All Users
   @Get()
   findAll() {
     return this.userService.findAll();
   }
 
-  // ✅ Get All Developers (for project manager selection)
+  // Get All Developers (with signed profile images)
   @Get('developers')
   async getDevelopers(@Query('search') search: string): Promise<User[]> {
     return this.userService.findAllDevelopers(search);
   }
 
-  // ✅ Get Single User (with signed profile image)
+  //  Get Single User (with signed profile image)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.userService.findOne(+id);
   }
 
-  // ✅ Update User Info
+  //  Update User Info
   @Put(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
   }
 
-  // ✅ Delete User
+  //  Delete User
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.userService.remove(+id);
   }
 
-  // ✅ Upload Profile Image and return signed URL
+  //  Upload Profile Image to S3
   @Post(':id/profile-image')
   @UseInterceptors(FileInterceptor('file'))
   async uploadProfileImage(
     @Param('id') id: number,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new Error('No file provided');
 
@@ -77,6 +77,12 @@ export class UserController {
     await this.userService.updateProfileImage(id, key, key);
     const signedUrl = await this.s3Service.getSignedUrl(key);
 
-    return { imageUrl: signedUrl }; // frontend will use this
+    return { imageUrl: signedUrl };
+  }
+
+  //  Delete Profile Image
+  @Delete(':id/profile-image')
+  async deleteProfileImage(@Param('id') id: number) {
+    return this.userService.deleteProfileImage(id);
   }
 }
