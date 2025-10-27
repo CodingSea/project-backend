@@ -65,6 +65,10 @@ export class CertificateService
   //  Delete certificate
   async remove(id: number): Promise<void>
   {
-    await this.certificateRepository.delete(id);
+    const result = await this.certificateRepository.delete(id);
+    if (result.affected === 0)
+    {
+      throw new NotFoundException(`Certificate ${id} not found`);
+    }
   }
 }
