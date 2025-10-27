@@ -4,31 +4,37 @@ import { CreateTaskBoardDto } from './dto/create-task-board.dto';
 import { UpdateTaskBoardDto } from './dto/update-task-board.dto';
 
 @Controller('task-board')
-export class TaskBoardController {
-  constructor(private readonly taskBoardService: TaskBoardService) {}
+export class TaskBoardController
+{
+  constructor(private readonly taskBoardService: TaskBoardService) { }
 
   @Post()
-  create(@Body() createTaskBoardDto: CreateTaskBoardDto) {
+  create(@Body() createTaskBoardDto: CreateTaskBoardDto)
+  {
     return this.taskBoardService.create(createTaskBoardDto);
   }
 
   @Get()
-  findAll() {
+  findAll()
+  {
     return this.taskBoardService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: string)
+  {
     return this.taskBoardService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskBoardDto: UpdateTaskBoardDto) {
+  update(@Param('id') id: string, @Body() updateTaskBoardDto: UpdateTaskBoardDto)
+  {
     return this.taskBoardService.update(+id, updateTaskBoardDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string)
+  {
     return this.taskBoardService.remove(+id);
   }
 }

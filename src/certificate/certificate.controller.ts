@@ -1,14 +1,15 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
+import
+  {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    UploadedFiles,
+    UseInterceptors,
+  } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { CertificateService } from './certificate.service';
 import { CreateCertificateDto } from './dto/create-certificate.dto';
@@ -18,11 +19,12 @@ import { S3Service } from 'src/s3/s3.service';
 import { Express } from 'express';
 
 @Controller('certificate')
-export class CertificateController {
+export class CertificateController
+{
   constructor(
     private readonly certificateService: CertificateService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   //  CREATE
   @Post(':userId')
@@ -59,7 +61,8 @@ export class CertificateController {
 
   // GET ALL
   @Get()
-  findAll() {
+  findAll()
+  {
     return this.certificateService.findAll();
   }
 
