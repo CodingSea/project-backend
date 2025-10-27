@@ -23,14 +23,17 @@ export class User {
   role: string;
 
   @Column({ type: "varchar", nullable: true })
-  profileImage: string;
+  profileImage: string | null;
 
   @Column({ type: "varchar", nullable: true })
-  profileImageID: string;
+  profileImageID: string | null;
 
   @Column({ type: "varchar", array: true, nullable: true })
   skills: string[];
 
   @OneToMany(() => Certificate, certificate => certificate.user)
   certificates: Certificate[];
+
+  @OneToMany(() => Service, service => service.chief)
+  chiefServices: Service[];
 }

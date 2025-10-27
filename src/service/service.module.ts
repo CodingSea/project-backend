@@ -11,7 +11,6 @@ import { TasksService } from 'src/tasks/tasks.service';
 import { ServiceController } from './service.controller';
 import { ServiceService } from './service.service';
 
-// ⬇️ bring in the module that exports S3Service
 import { S3Module } from 'src/s3/s3.module';
 import { MulterModule } from '@nestjs/platform-express';
 
