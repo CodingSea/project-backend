@@ -27,46 +27,54 @@ export class ServiceService {
     private readonly tasksService: TasksService,
   ) {}
 
-  // ✅ CREATE SERVICE (with full S3 + TaskBoard support)
-  async create(dto: CreateServiceDto): Promise<Service> {
-    if (!dto.chiefId) {
-      throw new BadRequestException('Chief is required to create a service');
-    }
-
-    const svc = this.svcRepo.create({
-      name: dto.name,
-      description: dto.description,
-      deadline: dto.deadline ? new Date(dto.deadline) : undefined,
-      status: ServiceStatus.Pending,
-      progress: 0,
-      files: dto.files || [],
-    });
-
-    const project = await this.projectRepo.findOneBy({ projectID: dto.projectId });
-    if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
-    svc.project = project;
-
-    const chief = await this.userRepo.findOneBy({ id: dto.chiefId });
-    if (!chief) throw new NotFoundException(`Chief ${dto.chiefId} not found`);
-    svc.chief = chief;
-
-    if (dto.managerId) {
-      const manager = await this.userRepo.findOneBy({ id: dto.managerId });
-      if (!manager) throw new NotFoundException(`Manager ${dto.managerId} not found`);
-      svc.projectManager = manager;
-    }
-
-    if (dto.resources?.length) {
-      svc.assignedResources = await this.userRepo.find({ where: { id: In(dto.resources) } });
-    }
-
-    // ✅ Create TaskBoard and link it to the service
-    const taskBoard = new TaskBoard();
-    taskBoard.service = svc;
-    svc.taskBoard = taskBoard;
-
-    return this.svcRepo.save(svc);
+// ✅ CREATE SERVICE (with full S3 + TaskBoard support)
+async create(dto: CreateServiceDto): Promise<Service> {
+  if (!dto.chiefId) {
+    throw new BadRequestException('Chief is required to create a service');
   }
+
+  const svc = this.svcRepo.create({
+    name: dto.name,
+    description: dto.description,
+    deadline: dto.deadline ? new Date(dto.deadline) : undefined,
+    status: ServiceStatus.Pending,
+    progress: 0,
+    files: dto.files || [],
+  });
+
+  const project = await this.projectRepo.findOneBy({ projectID: dto.projectId });
+  if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
+  svc.project = project;
+
+  const chief = await this.userRepo.findOneBy({ id: dto.chiefId });
+  if (!chief) throw new NotFoundException(`Chief ${dto.chiefId} not found`);
+  svc.chief = chief;
+
+  if (dto.managerId) {
+    const manager = await this.userRepo.findOneBy({ id: dto.managerId });
+    if (!manager) throw new NotFoundException(`Manager ${dto.managerId} not found`);
+    svc.projectManager = manager;
+  }
+
+  if (dto.resources?.length) {
+    svc.assignedResources = await this.userRepo.find({ where: { id: In(dto.resources) } });
+  }
+
+  // ✅ Create TaskBoard and link it to the service
+  const taskBoard = new TaskBoard();
+  taskBoard.service = svc;
+  svc.taskBoard = taskBoard;
+
+  const saved = await this.svcRepo.save(svc);
+
+  // 🧩 Remove circular reference before returning response
+  if (saved.taskBoard && saved.taskBoard.service) {
+delete (saved.taskBoard as any)?.service;
+  }
+
+  return saved;
+}
+
 
   // ✅ FETCH ALL SERVICES
   findAll(): Promise<Service[]> {
