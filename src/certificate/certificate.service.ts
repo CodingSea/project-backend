@@ -18,23 +18,19 @@ export class CertificateService
   ) { }
 
   //  Create Certificate
-  async create(
-    dto: CreateCertificateDto,
-    userId: number,
-    fileUrls: string[] = []
-  ): Promise<Certificate>
-  {
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) throw new NotFoundException('User not found');
+ async create(dto: CreateCertificateDto, userId: number): Promise<Certificate> {
+  const user = await this.userRepository.findOne({ where: { id: userId } });
+  if (!user) throw new NotFoundException('User not found');
 
-    const certificate = this.certificateRepository.create({
-      ...dto,
-      user: user,
-      certificateFile: fileUrls.length ? fileUrls : []
-    });
+  const certificate = this.certificateRepository.create({
+    ...dto,
+    user,
+    certificateFile: dto.certificateFile || [],
+  });
 
-    return await this.certificateRepository.save(certificate);
-  }
+  return this.certificateRepository.save(certificate);
+}
+
 
   //  Get all certificates for a specific user
   async getCertificatesByUserId(userId: number): Promise<Certificate[]>
@@ -71,4 +67,11 @@ export class CertificateService
       throw new NotFoundException(`Certificate ${id} not found`);
     }
   }
+
+  async findOne(id: number): Promise<Certificate> {
+  const cert = await this.certificateRepository.findOne({ where: { certificateID: id } });
+  if (!cert) throw new NotFoundException(`Certificate ${id} not found`);
+  return cert;
+}
+
 }

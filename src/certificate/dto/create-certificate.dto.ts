@@ -1,31 +1,33 @@
-import { IsNotEmpty, IsString, IsDateString } from 'class-validator';
-import { IsNull } from 'typeorm';
+import { IsNotEmpty, IsOptional, IsString, IsDateString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
-export class CreateCertificateDto
-{
-    @IsNotEmpty()
-    @IsString()
-    name: string;
+export class CreateCertificateDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
 
-    @IsNotEmpty()
-    @IsString()
-    type: string;
+  @IsNotEmpty()
+  @IsString()
+  type: string;
 
-    @IsNotEmpty()
-    @IsString()
-    issuingOrganization: string;
+  @IsNotEmpty()
+  @IsString()
+  issuingOrganization: string;
 
-    @IsNotEmpty()
-    @IsDateString()
-    issueDate: string;
+  @IsNotEmpty()
+  @IsDateString()
+  issueDate: string;
 
-    @IsNotEmpty()
-    @IsDateString()
-    expiryDate: Date;
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
 
-    @IsString()
-    description: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    // @IsString()
-    // CertificateFile: string; // Assuming this is a URL or path to the file
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => Object)
+  certificateFile?: { name: string; url: string }[];
 }

@@ -1,16 +1,15 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
-@Entity()
-export class Certificate
-{
+@Entity({ name: 'certificate' })
+export class Certificate {
   @PrimaryGeneratedColumn()
   certificateID: number;
 
-  @ManyToOne(() => User, user => user.certificates)
+  @ManyToOne(() => User, (user) => user.certificates, { onDelete: 'CASCADE' })
   user: User;
 
-  @Column()
+  @Column({ length: 120 })
   name: string;
 
   @Column()
@@ -19,17 +18,17 @@ export class Certificate
   @Column()
   issuingOrganization: string;
 
-  @Column()
+  @Column({ type: 'date' })
   issueDate: Date;
 
-  @Column()
+  @Column({ type: 'date', nullable: true })
   expiryDate: Date;
 
-  @Column({ nullable: true })
-  description: string;
+  @Column({ type: 'text', nullable: true })
+  description?: string;
 
-  @Column('text', { array: true, nullable: true }) // If you're storing multiple files
-  certificateFile: string[];
+  @Column({ type: 'json', nullable: true })
+  certificateFile?: { name: string; url: string }[];
 
   @CreateDateColumn()
   createdAt: Date;

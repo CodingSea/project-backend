@@ -9,10 +9,15 @@ async function bootstrap() {
     origin: process.env.FRONTEND_URL,
     credentials: true,
     methods: 'GET,POST,PATCH,DELETE,OPTIONS,PUT',
-    allowedHeaders: 'Content-Type, Authorization'
+    allowedHeaders: 'Content-Type, Authorization',
   });
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: false }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,   
+      whitelist: true,   
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
