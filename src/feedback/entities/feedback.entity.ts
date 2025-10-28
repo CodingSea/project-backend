@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Issue } from 'src/issue/entities/issue.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Feedback 
@@ -6,11 +7,8 @@ export class Feedback
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    issueId: number;
-
-    @Column()
-    userId: number;
+    @ManyToOne(() => Issue, (issue) => issue.feedbacks)
+    issue: Issue;
 
     @Column({ default: false })
     isPinned: boolean;

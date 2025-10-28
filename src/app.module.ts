@@ -26,6 +26,7 @@ import { IssueModule } from './issue/issue.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { AttachmentModule } from './attachment/attachment.module';
 import { Issue } from './issue/entities/issue.entity';
+import { Feedback } from './feedback/entities/feedback.entity';
 
 @Module({
   imports: [
@@ -42,7 +43,7 @@ import { Issue } from './issue/entities/issue.entity';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card, Issue ],
+        entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card, Issue, Feedback ],
         database: 'projectDB',
         synchronize: true,
         logging: true,
