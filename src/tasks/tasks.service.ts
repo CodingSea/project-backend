@@ -87,14 +87,10 @@ export class TasksService
 
     async getCardsFromTaskBoard(serviceId: number): Promise<Card[]>
     {
-        console.log('Service ID:', serviceId);
-
         const taskboard = await this.taskboardRepository.findOne({
             where: { service: { serviceID: serviceId } }, // Ensure this path is correct
             relations: [ 'cards' ], // Load the cards relation
         });
-
-        console.log('Taskboard:', taskboard);
 
         if (!taskboard)
         {
