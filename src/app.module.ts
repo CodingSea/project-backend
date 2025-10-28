@@ -22,6 +22,10 @@ import { Card } from './card/entities/card.entity';
 
 import { S3Module } from './s3/s3.module';
 import { TestController } from './test.controller';
+import { IssueModule } from './issue/issue.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { CodeModule } from './code/code.module';
+import { AttachmentModule } from './attachment/attachment.module';
 
 @Module({
   imports: [
@@ -53,7 +57,11 @@ import { TestController } from './test.controller';
     TaskBoardModule,
     CardModule,
     TasksModule,
-    S3Module
+    S3Module,
+    IssueModule,
+    FeedbackModule,
+    CodeModule,
+    AttachmentModule
   ],
   controllers: [ AppController, TestController ],
   providers: [ AppService ],
