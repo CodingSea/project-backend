@@ -63,9 +63,6 @@ export class Service {
   @ManyToOne(() => User, { nullable: true })
   backup?: User;
 
-  @OneToMany(() => Comment, (comment) => comment.service, { cascade: true })
-  comments: Comment[];
-
   // ✅ Service owns the TaskBoard relation
   @OneToOne(() => TaskBoard, (taskBoard) => taskBoard.service, {
     cascade: true,
