@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Feedback } from 'src/feedback/entities/feedback.entity';
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Issue 
@@ -11,13 +12,17 @@ export class Issue
     title: string;
 
     @Column()
+    description: string;
+
+    @Column()
     status: string;
 
     @Column()
     categories: string;
 
-    @Column()
-    createdBy: string;
+    @ManyToOne(() => User, (user) => user.issues)
+    @JoinColumn({ name: 'createdById' })
+    createdBy: User;
 
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;

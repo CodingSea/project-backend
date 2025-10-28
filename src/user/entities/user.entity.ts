@@ -1,9 +1,11 @@
 import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 import { Certificate } from "src/certificate/entities/certificate.entity";
 import { Service } from "src/service/entities/service.entity";
+import { Issue } from "src/issue/entities/issue.entity"; // Import the Issue entity
 
 @Entity()
-export class User {
+export class User
+{
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -19,7 +21,7 @@ export class User {
   @Column({ type: 'varchar' })
   password: string;
 
-  @Column({ type: 'enum', enum: ["admin", "developer"], default: "developer" })
+  @Column({ type: 'enum', enum: [ "admin", "developer" ], default: "developer" })
   role: string;
 
   @Column({ type: "varchar", nullable: true })
@@ -36,4 +38,7 @@ export class User {
 
   @OneToMany(() => Service, service => service.chief)
   chiefServices: Service[];
+
+  @OneToMany(() => Issue, issue => issue.createdBy) // Relationship with Issue
+  issues: Issue[]; // Add this line to establish the relationship
 }
