@@ -192,4 +192,22 @@ export class ServiceService
       await this.taskBoardRepo.remove(service.taskBoard);
     }
   }
+
+  async updateStatus(id: number, status: ServiceStatus): Promise<Service>
+  {
+    const service = await this.svcRepo.findOne({ where: { serviceID: id } });
+    if (!service)
+    {
+      throw new NotFoundException('Service not found');
+    }
+
+    // Check if the provided status is valid
+    if (!Object.values(ServiceStatus).includes(status as ServiceStatus))
+    {
+      throw new BadRequestException('Invalid status value');
+    }
+
+    service.status = status;
+    return this.svcRepo.save(service);
+  }
 }

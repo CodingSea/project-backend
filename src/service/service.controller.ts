@@ -1,15 +1,15 @@
 import
-  {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Patch,
-    Param,
-    Delete,
-    UploadedFiles,
-    UseInterceptors,
-  } from '@nestjs/common';
+{
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -20,6 +20,7 @@ import { TasksService } from 'src/tasks/tasks.service';
 import { Card } from 'src/card/entities/card.entity';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
 import { UpdateCardDto } from 'src/card/dto/update-card.dto';
+import { ServiceStatus } from './entities/service.entity';
 
 @Controller('service')
 export class ServiceController
@@ -142,6 +143,12 @@ export class ServiceController
 
     dto.files = [ ...(dto.files || []), ...uploadedFiles ];
     return this.serviceService.update(+id, dto);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(@Param('id') id: number, @Body('status') status: ServiceStatus)
+  {
+    return this.serviceService.updateStatus(id, status);
   }
 
   // ✅ DELETE SERVICE
