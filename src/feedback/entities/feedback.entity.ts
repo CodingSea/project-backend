@@ -1,21 +1,32 @@
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Issue } from 'src/issue/entities/issue.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 @Entity()
-export class Feedback 
-{
-    @PrimaryGeneratedColumn()
-    id: number;
+export class Feedback {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ManyToOne(() => Issue, (issue) => issue.feedbacks)
-    issue: Issue;
+  @ManyToOne(() => Issue, (issue) => issue.feedbacks, { onDelete: 'CASCADE' })
+  issue: Issue;
 
-    @Column({ default: false })
-    isPinned: boolean;
+  @ManyToOne(() => User, { eager: true }) // eager loads the author
+  user: User;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
+  @Column({ default: false })
+  isPinned: boolean;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-    updatedAt: Date;
+  @OneToMany(() => Comment, (comment) => comment.feedback)
+  comments: Comment[];
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
 }
