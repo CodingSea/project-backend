@@ -18,7 +18,7 @@ export class Issue
     status: string;
 
     @Column()
-    categories: string;
+    category: string;
 
     @ManyToOne(() => User, (user) => user.issues)
     @JoinColumn({ name: 'createdById' })
