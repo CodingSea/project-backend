@@ -17,9 +17,6 @@ export class Card
     @Column()
     description: string;
 
-    @OneToMany(() => Comment, (comment) => comment.card, { cascade: true })
-    comments: Comment[];
-
     @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards, { onDelete: 'CASCADE' })
     taskBoard: TaskBoard;
 

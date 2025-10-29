@@ -22,6 +22,11 @@ import { Card } from './card/entities/card.entity';
 
 import { S3Module } from './s3/s3.module';
 import { TestController } from './test.controller';
+import { IssueModule } from './issue/issue.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { AttachmentModule } from './attachment/attachment.module';
+import { Issue } from './issue/entities/issue.entity';
+import { Feedback } from './feedback/entities/feedback.entity';
 
 @Module({
   imports: [
@@ -38,7 +43,7 @@ import { TestController } from './test.controller';
         port: 5432,
         password: process.env.PASSWORD,
         username: 'postgres',
-        entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card ],
+        entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card, Issue, Feedback ],
         database: 'projectDB',
         synchronize: true,
         logging: true,
@@ -53,7 +58,10 @@ import { TestController } from './test.controller';
     TaskBoardModule,
     CardModule,
     TasksModule,
-    S3Module
+    S3Module,
+    IssueModule,
+    FeedbackModule,
+    AttachmentModule
   ],
   controllers: [ AppController, TestController ],
   providers: [ AppService ],
