@@ -1,14 +1,15 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UploadedFiles,
-  UseInterceptors,
-} from '@nestjs/common';
+import
+  {
+    Controller,
+    Get,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Delete,
+    UploadedFiles,
+    UseInterceptors,
+  } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ServiceService } from './service.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -21,12 +22,13 @@ import { CreateCardDto } from 'src/card/dto/create-card.dto';
 import { UpdateCardDto } from 'src/card/dto/update-card.dto';
 
 @Controller('service')
-export class ServiceController {
+export class ServiceController
+{
   constructor(
     private readonly serviceService: ServiceService,
     private readonly s3Service: S3Service,
     private readonly tasksService: TasksService,
-  ) {}
+  ) { }
 
   // ✅ CREATE SERVICE (with S3 upload)
   @Post()
@@ -34,12 +36,15 @@ export class ServiceController {
   async create(
     @UploadedFiles() files: Express.Multer.File[],
     @Body() body: any,
-  ) {
+  )
+  {
     console.log('🔥 CREATE → files received:', files?.length || 0);
 
     const uploadedFiles: { name: string; url: string }[] = [];
-    if (files?.length) {
-      for (const file of files) {
+    if (files?.length)
+    {
+      for (const file of files)
+      {
         const key = `services/${Date.now()}-${file.originalname}`;
         const keyPath = await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
         uploadedFiles.push({ name: file.originalname, url: keyPath });
@@ -57,8 +62,8 @@ export class ServiceController {
       resources: Array.isArray(body.resources)
         ? body.resources.map((r: any) => Number(r))
         : body.resources
-        ? [Number(body.resources)]
-        : [],
+          ? [ Number(body.resources) ]
+          : [],
       files: uploadedFiles,
     };
 
@@ -67,15 +72,18 @@ export class ServiceController {
 
   // ✅ GET ALL SERVICES
   @Get()
-  findAll() {
+  findAll()
+  {
     return this.serviceService.findAll();
   }
 
   // ✅ GET ONE SERVICE (with signed URLs)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string)
+  {
     const svc = await this.serviceService.findOne(+id);
-    if (svc.files?.length) {
+    if (svc.files?.length)
+    {
       svc.files = await Promise.all(
         svc.files.map(async (f) => ({
           name: f.name,
@@ -93,7 +101,8 @@ export class ServiceController {
     @Param('id') id: string,
     @UploadedFiles() newFiles: Express.Multer.File[],
     @Body() body: any,
-  ) {
+  )
+  {
     console.log('🔥 UPDATE → files received:', newFiles?.length || 0);
 
     const dto: UpdateServiceDto = { ...body };
@@ -101,50 +110,59 @@ export class ServiceController {
     const filesToDelete = body.filesToDelete ? JSON.parse(body.filesToDelete) : [];
 
     // 🗑️ Delete old files from S3
-    for (const f of filesToDelete) {
-      try {
+    for (const f of filesToDelete)
+    {
+      try
+      {
         let key = f.url;
-        if (key.startsWith('http')) {
+        if (key.startsWith('http'))
+        {
           const match = key.match(/iga-project-files\.s3\.me-south-1\.amazonaws\.com\/(.+?)(?:\?|$)/);
-          if (match && match[1]) key = match[1];
+          if (match && match[ 1 ]) key = match[ 1 ];
         }
         await this.s3Service.deleteFile(key);
         console.log('🗑️ Deleted:', key);
-      } catch (err) {
+      } catch (err)
+      {
         console.warn('⚠️ Could not delete:', f.url, err.message);
       }
     }
 
     // 📤 Upload new files
     const uploadedFiles: { name: string; url: string }[] = [];
-    if (newFiles?.length) {
-      for (const file of newFiles) {
+    if (newFiles?.length)
+    {
+      for (const file of newFiles)
+      {
         const key = `services/${Date.now()}-${file.originalname}`;
         const keyPath = await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
         uploadedFiles.push({ name: file.originalname, url: keyPath });
       }
     }
 
-    dto.files = [...(dto.files || []), ...uploadedFiles];
+    dto.files = [ ...(dto.files || []), ...uploadedFiles ];
     return this.serviceService.update(+id, dto);
   }
 
   // ✅ DELETE SERVICE
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string)
+  {
     return this.serviceService.remove(+id);
   }
 
   // ✅ GET SERVICES BY USER
   @Get('user/:id')
-  async getServicesByUser(@Param('id') userId: number): Promise<any[]> {
+  async getServicesByUser(@Param('id') userId: number): Promise<any[]>
+  {
     const services = await this.serviceService.getAllServicesForUser(userId);
     return services.length ? services : [];
   }
 
   // ✅ TASKBOARD ROUTES
   @Get(':serviceId/tasks')
-  async getCards(@Param('serviceId') serviceId: number): Promise<Card[]> {
+  async getCards(@Param('serviceId') serviceId: number): Promise<Card[]>
+  {
     return this.tasksService.getCardsFromTaskBoard(serviceId);
   }
 
@@ -152,7 +170,8 @@ export class ServiceController {
   async createCard(
     @Param('taskBoardId') taskBoardId: number,
     @Body() createCardDto: CreateCardDto,
-  ) {
+  )
+  {
     return this.tasksService.createCardIfNotExists(taskBoardId, createCardDto);
   }
 
@@ -161,12 +180,14 @@ export class ServiceController {
     @Param('taskBoardId') taskBoardId: number,
     @Param('cardId') cardId: number,
     @Body() updateCardDto: UpdateCardDto,
-  ): Promise<Card> {
+  ): Promise<Card>
+  {
     return this.tasksService.updateCard(taskBoardId, cardId, updateCardDto);
   }
 
   @Delete(':taskBoardId/tasks/:cardId')
-  async deleteCard(@Param('cardId') cardId: number): Promise<void> {
+  async deleteCard(@Param('cardId') cardId: number): Promise<void>
+  {
     return this.tasksService.deleteCard(cardId);
   }
 }

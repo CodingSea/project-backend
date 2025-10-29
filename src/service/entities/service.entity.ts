@@ -15,9 +15,11 @@ import { Comment } from 'src/comment/entities/comment.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 
 export enum ServiceStatus {
-  Pending = 'pending',
-  InProgress = 'in-progress',
-  Completed = 'completed',
+  New = 'Not Started Yet',
+  Pending = 'Pending Approval',
+  InProgress = 'In-Progress',
+  Completed = 'Completed',
+  OnHold = "On Hold"
 }
 
 @Entity({ name: 'service' })
