@@ -81,6 +81,9 @@ export class ServiceService
     return saved;
   }
 
+    if (saved.taskBoard && (saved.taskBoard as any).service) {
+      delete (saved.taskBoard as any).service;
+    }
 
   // ✅ FETCH ALL SERVICES
   findAll(): Promise<Service[]>
@@ -101,10 +104,10 @@ export class ServiceService
         'chief',
         'projectManager',
         'assignedResources',
-        'comments',
-        'taskBoard',
+        'taskBoard'
       ],
     });
+
     if (!svc) throw new NotFoundException(`Service ${id} not found`);
     return svc;
   }
@@ -116,8 +119,9 @@ export class ServiceService
 
     if (dto.name !== undefined) svc.name = dto.name;
     if (dto.description !== undefined) svc.description = dto.description;
-    if (dto.deadline !== undefined)
+    if (dto.deadline !== undefined) {
       svc.deadline = dto.deadline ? new Date(dto.deadline) : undefined;
+    }
     if (dto.status !== undefined) svc.status = dto.status;
 
     if (dto.projectId !== undefined)
