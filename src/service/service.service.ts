@@ -81,10 +81,6 @@ export class ServiceService
     return saved;
   }
 
-    if (saved.taskBoard && (saved.taskBoard as any).service) {
-      delete (saved.taskBoard as any).service;
-    }
-
   // ✅ FETCH ALL SERVICES
   findAll(): Promise<Service[]>
   {
