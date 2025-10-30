@@ -155,6 +155,9 @@ export class ServiceService
       svc.files = dto.files;
     }
 
+    console.log("Updated Service: ",svc);
+    console.log("Update DTO: ",dto);
+
     return this.svcRepo.save(svc);
   }
 
