@@ -3,33 +3,43 @@ import { Feedback } from 'src/feedback/entities/feedback.entity';
 import { User } from 'src/user/entities/user.entity';
 
 @Entity()
-export class Issue 
-{
-    @PrimaryGeneratedColumn()
-    id: number;
+export class Issue {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column()
-    description: string;
+  @Column()
+  description: string;
 
-    @Column()
-    status: string;
+  @Column({ default: 'open' })
+  status: string;
 
-    @Column()
-    categories: string;
+  @Column({ nullable: true })
+  category?: string;
 
-    @ManyToOne(() => User, (user) => user.issues)
-    @JoinColumn({ name: 'createdById' })
-    createdBy: User;
+  @Column({ type: 'text', nullable: true })
+  codeSnippet?: string;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
+  // ✅ JSON column for S3 attachment objects
+  @Column({ type: 'json', nullable: true })
+  attachments?: { name: string; url: string }[];
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-    updatedAt: Date;
+  @ManyToOne(() => User, (user) => user.issues)
+  @JoinColumn({ name: 'createdById' })
+  createdBy: User;
 
-    @OneToMany(() => Feedback, (feedback) => feedback.issue)
-    feedbacks: Feedback[];
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
+  updatedAt: Date;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.issue)
+  feedbacks: Feedback[];
 }

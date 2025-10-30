@@ -1,4 +1,13 @@
-import { IsString, IsOptional, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsNotEmpty, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class AttachmentDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  url: string;
+}
 
 export class CreateIssueDto {
   @IsNotEmpty()
@@ -17,8 +26,17 @@ export class CreateIssueDto {
 
   @IsOptional()
   @IsString()
-  categories?: string;
+  category?: string;
 
   @IsOptional()
-  createdById?: number; // linked to User
+  @IsString()
+  codeSnippet?: string;
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => AttachmentDto)
+  attachments?: { name: string; url: string }[];
+
+  @IsOptional()
+  createdById?: number;
 }
