@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Issue } from 'src/issue/entities/issue.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
@@ -8,25 +8,35 @@ export class Feedback {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Issue, (issue) => issue.feedbacks, { onDelete: 'CASCADE' })
-  issue: Issue;
+  @Column({ type: 'text' })
+  content: string;
 
-  @ManyToOne(() => User, { eager: true }) // eager loads the author
-  user: User;
+  @Column({ type: 'json', nullable: true })
+  attachments?: { name: string; url: string }[];
 
   @Column({ default: false })
-  isPinned: boolean;
+  isAccepted: boolean;
 
-  @OneToMany(() => Comment, (comment) => comment.feedback)
+  @ManyToOne(() => Issue, issue => issue.feedbacks, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'issueId' }) 
+  issue: Issue;
+
+  @Column()
+  issueId: number;
+
+  @ManyToOne(() => User, user => user.issues, { eager: true })
+  @JoinColumn({ name: 'userId' })
+  user: User;
+
+  @Column()
+  userId: number;
+
+  @OneToMany(() => Comment, (comment) => comment.feedback, { cascade: true })
   comments: Comment[];
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn()
   createdAt: Date;
 
-  @Column({
-    type: 'timestamp',
-    default: () => 'CURRENT_TIMESTAMP',
-    onUpdate: 'CURRENT_TIMESTAMP',
-  })
+  @UpdateDateColumn()
   updatedAt: Date;
 }

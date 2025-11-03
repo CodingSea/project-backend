@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { Feedback } from 'src/feedback/entities/feedback.entity';
 import { User } from 'src/user/entities/user.entity';
 
@@ -7,17 +7,23 @@ export class Comment {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ type: 'text' })
+  content: string;
+
   @ManyToOne(() => Feedback, (feedback) => feedback.comments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'feedbackId' })
   feedback: Feedback;
+
+  @Column()
+  feedbackId: number;
 
   @ManyToOne(() => User, { eager: true })
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()
-  content: string;
+  userId: number;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn()
   createdAt: Date;
 }

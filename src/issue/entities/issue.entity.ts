@@ -26,9 +26,13 @@ export class Issue {
   @Column({ type: 'json', nullable: true })
   attachments?: { name: string; url: string }[];
 
-  @ManyToOne(() => User, (user) => user.issues)
-  @JoinColumn({ name: 'createdById' })
-  createdBy: User;
+@ManyToOne(() => User, (user) => user.issues, { eager: true })
+@JoinColumn({ name: 'createdById' })
+createdBy: User;
+
+@Column()
+createdById: number;
+
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

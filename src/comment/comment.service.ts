@@ -1,26 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Comment } from './entities/comment.entity';
+import { Feedback } from 'src/feedback/entities/feedback.entity';
 
 @Injectable()
 export class CommentService {
-  create(createCommentDto: CreateCommentDto) {
-    return 'This action adds a new comment';
-  }
+  constructor(
+    @InjectRepository(Comment)
+    private readonly commentRepo: Repository<Comment>,
 
-  findAll() {
-    return `This action returns all comment`;
-  }
+    @InjectRepository(Feedback)
+    private readonly feedbackRepo: Repository<Feedback>,
+  ) {}
+async create(dto: CreateCommentDto) {
+  const feedback = await this.feedbackRepo.findOne({ where: { id: dto.feedbackId } });
 
-  findOne(id: number) {
-    return `This action returns a #${id} comment`;
-  }
+  if (!feedback) throw new NotFoundException('Feedback not found');
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
-    return `This action updates a #${id} comment`;
-  }
+  const comment = this.commentRepo.create({
+    content: dto.content,
+    feedbackId: dto.feedbackId,
+    userId: dto.userId,
+  });
 
-  remove(id: number) {
-    return `This action removes a #${id} comment`;
-  }
+  await this.commentRepo.save(comment);
+
+  // Return user details including profileImage
+  return await this.commentRepo.findOne({
+    where: { id: comment.id },
+    relations: ['user'],
+  });
+}
+
 }

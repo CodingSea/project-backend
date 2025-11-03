@@ -1,7 +1,8 @@
 import { IsString, IsOptional, IsEnum, IsNotEmpty, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class AttachmentDto {
+export class AttachmentDto
+{
   @IsString()
   name: string;
 
@@ -9,7 +10,8 @@ export class AttachmentDto {
   url: string;
 }
 
-export class CreateIssueDto {
+export class CreateIssueDto
+{
   @IsNotEmpty()
   @IsString()
   title: string;
@@ -19,7 +21,7 @@ export class CreateIssueDto {
   description: string;
 
   @IsOptional()
-  @IsEnum(['open', 'in-progress', 'resolved'], {
+  @IsEnum([ 'open', 'in-progress', 'resolved' ], {
     message: 'Status must be one of: open, in-progress, resolved',
   })
   status?: string;

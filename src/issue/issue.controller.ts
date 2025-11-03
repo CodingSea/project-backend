@@ -1,4 +1,5 @@
-import {
+import
+{
   Controller,
   Get,
   Post,
@@ -9,6 +10,8 @@ import {
   UploadedFiles,
   UseInterceptors,
   Query,
+  Res,
+  BadRequestException
 } from '@nestjs/common';
 import { IssueService } from './issue.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
@@ -18,29 +21,41 @@ import { S3Service } from 'src/s3/s3.service';
 import { Express } from 'express';
 
 @Controller('issue')
-export class IssueController {
+export class IssueController
+{
   constructor(
     private readonly issueService: IssueService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
-  // ✅ CREATE ISSUE (with S3 upload)
+  @Get('count')
+  async countFilteredIssues(
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+    @Query('search') searchQuery?: string
+  ): Promise<number>
+  {
+    return this.issueService.countIssues(status, category, searchQuery);
+  }
+
   @Post()
   @UseInterceptors(FilesInterceptor('attachments'))
-  async create(
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body() body: any,
-  ) {
-    console.log('🔥 CREATE ISSUE → files received:', files?.length || 0);
+  async create(@UploadedFiles() files: Express.Multer.File[], @Body() body: any)
+  {
+    const uploadedFiles: { name: string; url: string; key: string }[] = [];
 
-    const uploadedFiles: { name: string; url: string }[] = [];
-
-    if (files?.length) {
-      for (const file of files) {
+    if (files?.length)
+    {
+      for (const file of files)
+      {
         const key = `issues/${Date.now()}-${file.originalname}`;
-        const keyPath = await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
-        uploadedFiles.push({ name: file.originalname, url: keyPath });
-        console.log('✅ Uploaded to S3:', key);
+        await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
+
+        uploadedFiles.push({
+          name: file.originalname,
+          url: key,
+          key
+        });
       }
     }
 
@@ -50,48 +65,52 @@ export class IssueController {
       category: body.category,
       codeSnippet: body.codeSnippet,
       attachments: uploadedFiles,
-      createdById: Number(body.createdById) || undefined,
+      createdById: Number(body.createdById),
     };
 
     return this.issueService.create(dto);
   }
 
-  // ✅ GET ALL
-  @Get()
-  async findAll(
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-    @Query('status') status?: string,
-    @Query('category') category?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.issueService.getIssues(page, limit, status, category, search);
+  @Get('file/download')
+  async downloadIssueFile(@Query('key') key: string, @Res() res: any)
+  {
+    const fileStream = await this.s3Service.getFileStream(key);
+    const fileName = key.split('/').pop();
+
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
+
+    fileStream.pipe(res);
   }
 
-  // ✅ GET ONE (with signed URLs)
+  @Get()
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 10)
+  {
+    return this.issueService.getIssues(page, limit);
+  }
+
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    const issue = await this.issueService.findOne(+id);
-
-    if (issue.attachments?.length) {
-      issue.attachments = await Promise.all(
-        issue.attachments.map(async (f: any) => ({
-          name: f.name,
-          url: await this.s3Service.getSignedUrl(f.url, 3600),
-        })),
-      );
+  async findOne(@Param('id') id: number)
+  {
+    if (isNaN(id))
+    {
+      throw new BadRequestException('Invalid issue ID');
     }
-
-    return issue;
+    return this.issueService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateIssueDto) {
+  update(@Param('id') id: number, @Body() dto: UpdateIssueDto)
+  {
     return this.issueService.update(+id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number)
+  {
     return this.issueService.remove(+id);
   }
+
 }
