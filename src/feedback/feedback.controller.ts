@@ -1,34 +1,63 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Param, Body, UploadedFiles, UseInterceptors, Get, Query, Res } from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
-import { CreateFeedbackDto } from './dto/create-feedback.dto';
-import { UpdateFeedbackDto } from './dto/update-feedback.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { S3Service } from 'src/s3/s3.service';
 
-@Controller('feedback')
+@Controller('issue')
 export class FeedbackController {
-  constructor(private readonly feedbackService: FeedbackService) {}
+  constructor(
+    private readonly feedbackService: FeedbackService,
+    private readonly s3Service: S3Service,
+  ) {}
 
-  @Post()
-  create(@Body() createFeedbackDto: CreateFeedbackDto) {
-    return this.feedbackService.create(createFeedbackDto);
+  @Post('feedback/:id/toggle')
+  toggleFeedback(
+    @Param('id') id: string,
+    @Body('issueOwnerId') issueOwnerId: number
+  ) {
+    return this.feedbackService.toggleAccepted(Number(id), issueOwnerId);
   }
 
-  @Get()
-  findAll() {
-    return this.feedbackService.findAll();
+  @Post(':id/feedback')
+  @UseInterceptors(FilesInterceptor('attachments'))
+  async addFeedback(
+    @Param('id') id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() body: any,
+  ) {
+    const uploadedFiles: { name: string; url: string; key: string }[] = [];
+
+    if (files?.length) {
+      for (const file of files) {
+        const key = `feedback/${Date.now()}-${file.originalname}`;
+        await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
+
+        uploadedFiles.push({
+          name: file.originalname,
+          url: key,
+          key
+        });
+      }
+    }
+
+    return this.feedbackService.create({
+      issueId: Number(id),
+      userId: Number(body.userId),
+      content: body.content,
+      attachments: uploadedFiles,
+    });
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.feedbackService.findOne(+id);
-  }
+  @Get('feedback/download')
+  async downloadFeedbackFile(@Query('key') key: string, @Res() res: any) {
+    const fileStream = await this.s3Service.getFileStream(key);
+    const fileName = key.split('/').pop();
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFeedbackDto: UpdateFeedbackDto) {
-    return this.feedbackService.update(+id, updateFeedbackDto);
-  }
+    res.set({
+      'Content-Type': 'application/octet-stream',
+      'Content-Disposition': `attachment; filename="${fileName}"`,
+    });
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.feedbackService.remove(+id);
+    fileStream.pipe(res);
   }
 }

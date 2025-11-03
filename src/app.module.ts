@@ -45,7 +45,7 @@ import { Feedback } from './feedback/entities/feedback.entity';
         username: 'postgres',
         entities: [ User, Project, Service, Comment, Certificate, TaskBoard, Card, Issue, Feedback ],
         database: 'projectDB',
-        synchronize: true,
+        synchronize: false,
         logging: true,
       }
     ),

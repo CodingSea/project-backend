@@ -70,4 +70,26 @@ export class S3Service {
       throw new Error('Failed to delete from S3');
     }
   }
+
+    // Generate forced-download signed URL
+  async getDownloadUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+    const filename = key.split('/').pop() || 'download';
+
+    const params = {
+      Bucket: this.bucketName,
+      Key: key,
+      Expires: expiresInSeconds,
+      ResponseContentDisposition: `attachment; filename="${filename}"`,
+    };
+
+    return this.s3.getSignedUrlPromise('getObject', params);
+  }
+  async getFileStream(key: string) {
+  return this.s3.getObject({
+    Bucket: this.bucketName,
+    Key: key
+  }).createReadStream();
+}
+
+
 }
