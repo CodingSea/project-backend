@@ -43,7 +43,7 @@ export class FeedbackController {
     return this.feedbackService.create({
       issueId: Number(id),
       userId: Number(body.userId),
-      content: body.content,
+      content: body ?? "",
       attachments: uploadedFiles,
     });
   }

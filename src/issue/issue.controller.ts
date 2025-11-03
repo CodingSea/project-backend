@@ -1,4 +1,5 @@
-import {
+import
+{
   Controller,
   Get,
   Post,
@@ -9,7 +10,8 @@ import {
   UploadedFiles,
   UseInterceptors,
   Query,
-  Res
+  Res,
+  BadRequestException
 } from '@nestjs/common';
 import { IssueService } from './issue.service';
 import { CreateIssueDto } from './dto/create-issue.dto';
@@ -19,19 +21,33 @@ import { S3Service } from 'src/s3/s3.service';
 import { Express } from 'express';
 
 @Controller('issue')
-export class IssueController {
+export class IssueController
+{
   constructor(
     private readonly issueService: IssueService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
+
+  @Get('count')
+  async countFilteredIssues(
+    @Query('status') status?: string,
+    @Query('category') category?: string,
+    @Query('search') searchQuery?: string
+  ): Promise<number>
+  {
+    return this.issueService.countIssues(status, category, searchQuery);
+  }
 
   @Post()
   @UseInterceptors(FilesInterceptor('attachments'))
-  async create(@UploadedFiles() files: Express.Multer.File[], @Body() body: any) {
+  async create(@UploadedFiles() files: Express.Multer.File[], @Body() body: any)
+  {
     const uploadedFiles: { name: string; url: string; key: string }[] = [];
 
-    if (files?.length) {
-      for (const file of files) {
+    if (files?.length)
+    {
+      for (const file of files)
+      {
         const key = `issues/${Date.now()}-${file.originalname}`;
         await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
 
@@ -56,7 +72,8 @@ export class IssueController {
   }
 
   @Get('file/download')
-  async downloadIssueFile(@Query('key') key: string, @Res() res: any) {
+  async downloadIssueFile(@Query('key') key: string, @Res() res: any)
+  {
     const fileStream = await this.s3Service.getFileStream(key);
     const fileName = key.split('/').pop();
 
@@ -69,22 +86,31 @@ export class IssueController {
   }
 
   @Get()
-  async findAll(@Query('page') page = 1, @Query('limit') limit = 10) {
+  async findAll(@Query('page') page = 1, @Query('limit') limit = 10)
+  {
     return this.issueService.getIssues(page, limit);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number)
+  {
+    if (isNaN(id))
+    {
+      throw new BadRequestException('Invalid issue ID');
+    }
     return this.issueService.findOne(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateIssueDto) {
+  update(@Param('id') id: number, @Body() dto: UpdateIssueDto)
+  {
     return this.issueService.update(+id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number)
+  {
     return this.issueService.remove(+id);
   }
+
 }

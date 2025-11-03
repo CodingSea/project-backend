@@ -22,7 +22,7 @@ export class FeedbackService {
     if (!user) throw new NotFoundException(`User ${dto.userId} not found`);
 
     const feedback = this.feedbackRepo.create({
-      content: dto.content,
+      content: dto.content ?? "",
       attachments: dto.attachments ?? [],
       issue,
       user,
