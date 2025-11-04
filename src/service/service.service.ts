@@ -118,7 +118,8 @@ export class ServiceService
         'chief',
         'projectManager',
         'assignedResources',
-        'taskBoard'
+        'taskBoard',
+        'issue'
       ],
     });
 
