@@ -92,6 +92,13 @@ export class ServiceController
     return svc;
   }
 
+  @Get(':id/issue')
+  async getServiceIssue(@Param('id') id: string)
+  {
+    const svc = await this.serviceService.findOne(+id);
+    return svc.issue;
+  }
+
   // ✅ UPDATE SERVICE (upload new, delete old)
   @Patch(':id')
   @UseInterceptors(FilesInterceptor('newFiles'))
