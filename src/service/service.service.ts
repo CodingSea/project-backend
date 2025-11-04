@@ -8,6 +8,7 @@ import { Project } from 'src/project/entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { TasksService } from 'src/tasks/tasks.service';
+import { Issue } from 'src/issue/entities/issue.entity';
 
 @Injectable()
 export class ServiceService
@@ -25,6 +26,9 @@ export class ServiceService
     @InjectRepository(TaskBoard)
     private readonly taskBoardRepo: Repository<TaskBoard>,
 
+    @InjectRepository(Issue)
+    private readonly issueRepo: Repository<Issue>,
+
     private readonly tasksService: TasksService,
   ) { }
 
@@ -36,6 +40,7 @@ export class ServiceService
       throw new BadRequestException('Chief is required to create a service');
     }
 
+    // Create the service entity
     const svc = this.svcRepo.create({
       name: dto.name,
       description: dto.description,
@@ -45,14 +50,17 @@ export class ServiceService
       files: dto.files || [],
     });
 
+    // Validate and assign the project
     const project = await this.projectRepo.findOneBy({ projectID: dto.projectId });
     if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
     svc.project = project;
 
+    // Validate and assign the chief
     const chief = await this.userRepo.findOneBy({ id: dto.chiefId });
     if (!chief) throw new NotFoundException(`Chief ${dto.chiefId} not found`);
     svc.chief = chief;
 
+    // Validate and assign the manager if provided
     if (dto.managerId)
     {
       const manager = await this.userRepo.findOneBy({ id: dto.managerId });
@@ -60,19 +68,29 @@ export class ServiceService
       svc.projectManager = manager;
     }
 
+    // Assign resources if provided
     if (dto.resources?.length)
     {
       svc.assignedResources = await this.userRepo.find({ where: { id: In(dto.resources) } });
     }
 
-    // ✅ Create TaskBoard and link it to the service
+    // Create TaskBoard and link it to the service
     const taskBoard = new TaskBoard();
     taskBoard.service = svc;
     svc.taskBoard = taskBoard;
 
+    // Create Issue and link it to the service
+    const issue = new Issue();
+    issue.title = svc.name || ""; // Use issue title from DTO
+    issue.description = svc.description || ""; // Use issue description from DTO
+    issue.status = 'Open'; // Default issue status to 'open'
+    issue.createdBy = chief; // Link the issue to the chief
+    svc.issue = issue;
+
+    // Save the service and related entities
     const saved = await this.svcRepo.save(svc);
 
-    // 🧩 Remove circular reference before returning response
+    // Remove circular reference before returning response
     if (saved.taskBoard && saved.taskBoard.service)
     {
       delete (saved.taskBoard as any)?.service;
@@ -100,7 +118,8 @@ export class ServiceService
         'chief',
         'projectManager',
         'assignedResources',
-        'taskBoard'
+        'taskBoard',
+        'issue'
       ],
     });
 
@@ -115,7 +134,8 @@ export class ServiceService
 
     if (dto.name !== undefined) svc.name = dto.name;
     if (dto.description !== undefined) svc.description = dto.description;
-    if (dto.deadline !== undefined) {
+    if (dto.deadline !== undefined)
+    {
       svc.deadline = dto.deadline ? new Date(dto.deadline) : undefined;
     }
     if (dto.status !== undefined) svc.status = dto.status;
@@ -155,9 +175,6 @@ export class ServiceService
       svc.files = dto.files;
     }
 
-    console.log("Updated Service: ",svc);
-    console.log("Update DTO: ",dto);
-
     return this.svcRepo.save(svc);
   }
 
@@ -183,7 +200,7 @@ export class ServiceService
   {
     const service = await this.svcRepo.findOne({
       where: { serviceID: id },
-      relations: [ 'taskBoard' ],
+      relations: [ 'taskBoard', 'issue' ],
     });
 
     if (!service) throw new NotFoundException('Service not found');
@@ -193,6 +210,11 @@ export class ServiceService
     if (service.taskBoard)
     {
       await this.taskBoardRepo.remove(service.taskBoard);
+    }
+
+    if (service.issue)
+    {
+      await this.issueRepo.remove(service.issue);
     }
   }
 

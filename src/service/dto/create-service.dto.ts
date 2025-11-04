@@ -9,6 +9,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ServiceStatus } from '../entities/service.entity';
+import { Issue } from 'src/issue/entities/issue.entity';
 
 export class CreateServiceDto {
   @IsString()
@@ -51,4 +52,7 @@ export class CreateServiceDto {
   @ValidateNested({ each: true })
   @Type(() => Object)
   files?: { name: string; url: string }[];
+
+  @IsOptional()
+  issue?: Issue
 }

@@ -39,8 +39,6 @@ export class ServiceController
     @Body() body: any,
   )
   {
-    console.log('🔥 CREATE → files received:', files?.length || 0);
-
     const uploadedFiles: { name: string; url: string }[] = [];
     if (files?.length)
     {
@@ -49,7 +47,6 @@ export class ServiceController
         const key = `services/${Date.now()}-${file.originalname}`;
         const keyPath = await this.s3Service.uploadBuffer(file.buffer, key, file.mimetype);
         uploadedFiles.push({ name: file.originalname, url: keyPath });
-        console.log('✅ Uploaded to S3:', key);
       }
     }
 
@@ -93,6 +90,13 @@ export class ServiceController
       );
     }
     return svc;
+  }
+
+  @Get(':id/issue')
+  async getServiceIssue(@Param('id') id: string)
+  {
+    const svc = await this.serviceService.findOne(+id);
+    return svc.issue;
   }
 
   // ✅ UPDATE SERVICE (upload new, delete old)

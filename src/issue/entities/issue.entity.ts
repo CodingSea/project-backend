@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 import { Feedback } from 'src/feedback/entities/feedback.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Service } from 'src/service/entities/service.entity';
 
 @Entity()
 export class Issue {
@@ -46,4 +47,7 @@ createdById: number;
 
   @OneToMany(() => Feedback, (feedback) => feedback.issue)
   feedbacks: Feedback[];
+
+  @OneToOne(() => Service, service => service.issue, {nullable: true})
+  service?: Service;
 }
