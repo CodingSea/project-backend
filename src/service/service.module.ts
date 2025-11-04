@@ -13,9 +13,10 @@ import { ServiceService } from './service.service';
 
 import { S3Module } from 'src/s3/s3.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { Issue } from 'src/issue/entities/issue.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Service, Project, User, TaskBoard, Card]),
+  imports: [TypeOrmModule.forFeature([Service, Project, User, TaskBoard, Card, Issue]),
   S3Module,
   MulterModule.register({})
   ],

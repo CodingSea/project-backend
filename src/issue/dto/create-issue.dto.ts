@@ -1,5 +1,6 @@
 import { IsString, IsOptional, IsEnum, IsNotEmpty, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Issue } from '../entities/issue.entity';
 
 export class AttachmentDto
 {

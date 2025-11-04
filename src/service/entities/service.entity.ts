@@ -1,19 +1,20 @@
 import
-  {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    ManyToMany,
-    JoinTable,
-    OneToMany,
-    OneToOne,
-    JoinColumn,
-  } from 'typeorm';
+{
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Project } from 'src/project/entities/project.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
+import { Issue } from 'src/issue/entities/issue.entity';
 
 export enum ServiceStatus
 {
@@ -75,4 +76,8 @@ export class Service
   })
   @JoinColumn()
   taskBoard: TaskBoard;
+
+  @OneToOne(() => Issue, issue => issue.service, { cascade: true })
+  @JoinColumn()
+  issue: Issue;
 }
