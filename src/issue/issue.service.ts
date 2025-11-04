@@ -40,39 +40,35 @@ export class IssueService
     return this.issueRepo.save(issue);
   }
 
-  async getIssues(page: number, limit: number)
-  {
-    const skip = (page - 1) * limit;
+async getIssues(page: number, limit: number, status?: string, category?: string, search?: string) {
+  const skip = (page - 1) * limit;
 
-    const issues = await this.issueRepo.find({
-      relations: [ 'createdBy' ],
-      skip,
-      take: limit,
-      order: { createdAt: 'DESC' },
-    });
+  const queryBuilder = this.issueRepo
+    .createQueryBuilder("issue")
+    .leftJoinAndSelect("issue.createdBy", "createdBy")
+    .orderBy("issue.createdAt", "DESC")
+    .skip(skip)
+    .take(limit);
 
-    for (const issue of issues)
-    {
-      if (issue.createdBy?.profileImageID)
-      {
-        issue.createdBy.profileImage = await this.s3Service.getSignedUrl(
-          issue.createdBy.profileImageID
-        );
-      }
-
-      if (issue.attachments?.length)
-      {
-        issue.attachments = await Promise.all(
-          issue.attachments.map(async (file) => ({
-            name: file.name,
-            url: await this.s3Service.getSignedUrl(file.url ?? file, 3600),
-          }))
-        );
-      }
-    }
-
-    return issues;
+  if (status && status !== "all") {
+    queryBuilder.andWhere("issue.status = :status", { status });
   }
+
+  if (category && category !== "all") {
+    queryBuilder.andWhere("issue.category = :category", { category });
+  }
+
+  if (search) {
+    queryBuilder.andWhere(
+      "(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)",
+      { search: `%${search.toLowerCase()}%` }
+    );
+  }
+
+  const issues = await queryBuilder.getMany();
+  return issues;
+}
+
 
   async findOne(id: number)
   {
@@ -160,33 +156,26 @@ export class IssueService
     return { message: `Issue #${id} deleted` };
   }
 
-  async countIssues(status?: string, category?: string, searchQuery?: string): Promise<number>
-  {
-    const queryBuilder = this.issueRepo.createQueryBuilder('issue');
+async countIssues(status?: string, category?: string, searchQuery?: string): Promise<number> {
+  const queryBuilder = this.issueRepo.createQueryBuilder('issue');
 
-    // Apply filtering based on status
-    if (status && status !== 'All')
-    {
-      queryBuilder.andWhere('issue.status = :status', { status });
-    }
-
-    // Apply filtering based on category
-    if (category && category !== 'AllCategories')
-    {
-      queryBuilder.andWhere('issue.category = :category', { category });
-    }
-
-    // Apply search query if provided
-    if (searchQuery)
-    {
-      queryBuilder.andWhere('(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)', {
-        search: `%${searchQuery.toLowerCase()}%`
-      });
-    }
-
-    console.log("issue count:",queryBuilder.getCount());
-
-    return queryBuilder.getCount();
+  if (status && status !== 'all') {
+    queryBuilder.andWhere('issue.status = :status', { status });
   }
+
+  if (category && category !== 'all') {
+    queryBuilder.andWhere('issue.category = :category', { category });
+  }
+
+  if (searchQuery) {
+    queryBuilder.andWhere(
+      '(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)',
+      { search: `%${searchQuery.toLowerCase()}%` }
+    );
+  }
+
+  return queryBuilder.getCount();
+}
+
 
 }
