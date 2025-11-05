@@ -119,4 +119,10 @@ async findAll(
     return this.issueService.remove(+id);
   }
 
+  @Patch(':id/status')
+async updateStatus(@Param('id') id: number, @Body('status') status: string) {
+  return this.issueService.updateStatus(+id, status);
+}
+
+
 }

@@ -25,7 +25,7 @@ export class IssueService
     const issue = this.issueRepo.create({
       title: createIssueDto.title,
       description: createIssueDto.description,
-      status: createIssueDto.status ?? 'Open',
+      status: createIssueDto.status ?? 'open',
       category: createIssueDto.category,
       codeSnippet: createIssueDto.codeSnippet,
       attachments: createIssueDto.attachments ?? [],
@@ -175,6 +175,13 @@ async countIssues(status?: string, category?: string, searchQuery?: string): Pro
   }
 
   return queryBuilder.getCount();
+}
+async updateStatus(id: number, status: string) {
+  const issue = await this.issueRepo.findOne({ where: { id } });
+  if (!issue) throw new NotFoundException(`Issue #${id} not found`);
+
+  issue.status = status;
+  return this.issueRepo.save(issue);
 }
 
 
