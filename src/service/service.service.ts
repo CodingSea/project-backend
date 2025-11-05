@@ -83,7 +83,7 @@ export class ServiceService
     const issue = new Issue();
     issue.title = svc.name || ""; // Use issue title from DTO
     issue.description = svc.description || ""; // Use issue description from DTO
-    issue.status = 'Open'; // Default issue status to 'open'
+    issue.status = 'open'; // Default issue status to 'open'
     issue.createdBy = chief; // Link the issue to the chief
     issue.category = "Service";
     svc.issue = issue;

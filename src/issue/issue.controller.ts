@@ -85,11 +85,17 @@ export class IssueController
     fileStream.pipe(res);
   }
 
-  @Get()
-  async findAll(@Query('page') page = 1, @Query('limit') limit = 10)
-  {
-    return this.issueService.getIssues(page, limit);
-  }
+@Get()
+async findAll(
+  @Query('page') page = 1,
+  @Query('limit') limit = 10,
+  @Query('status') status?: string,
+  @Query('category') category?: string,
+  @Query('search') search?: string
+) {
+  return this.issueService.getIssues(page, limit, status, category, search);
+}
+
 
   @Get(':id')
   async findOne(@Param('id') id: number)
@@ -112,5 +118,11 @@ export class IssueController
   {
     return this.issueService.remove(+id);
   }
+
+  @Patch(':id/status')
+async updateStatus(@Param('id') id: number, @Body('status') status: string) {
+  return this.issueService.updateStatus(+id, status);
+}
+
 
 }
