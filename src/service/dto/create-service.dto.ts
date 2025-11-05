@@ -34,7 +34,8 @@ export class CreateServiceDto {
   // ✅ Chief and manager are required
   @Type(() => Number)
   @IsInt()
-  chiefId: number;
+  @IsOptional()
+  chiefId?: number;
 
   @IsOptional()
   @Type(() => Number)

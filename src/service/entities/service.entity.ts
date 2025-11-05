@@ -40,7 +40,7 @@ export class Service
   @Column({ type: 'date', nullable: true })
   deadline?: Date;
 
-  @Column({ type: 'enum', enum: ServiceStatus, default: ServiceStatus.Pending })
+  @Column({ type: 'enum', enum: ServiceStatus, default: ServiceStatus.New })
   status: ServiceStatus;
 
   @Column({ type: 'int', default: 0 })
