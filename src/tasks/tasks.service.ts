@@ -34,7 +34,7 @@ export class TasksService
     {
         return await this.taskboardRepository.findOne({
             where: { id: id },
-            relations: [ 'cards', 'service', 'service.chief', 'service.projectManager' ]
+            relations: [ 'cards', 'service', 'service.chief', 'service.projectManager', 'service.project' ]
         });
     }
 
