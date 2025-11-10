@@ -32,10 +32,11 @@ export class IssueController
   async countFilteredIssues(
     @Query('status') status?: string,
     @Query('category') category?: string,
-    @Query('search') searchQuery?: string
+    @Query('search') searchQuery?: string,
+    @Query('userId') userId?: number
   ): Promise<number>
   {
-    return this.issueService.countIssues(status, category, searchQuery);
+    return this.issueService.countIssues(status, category, searchQuery, userId);
   }
 
   @Post()
@@ -91,9 +92,10 @@ async findAll(
   @Query('limit') limit = 10,
   @Query('status') status?: string,
   @Query('category') category?: string,
-  @Query('search') search?: string
+  @Query('search') search?: string,
+  @Query('userId') userId?: number
 ) {
-  return this.issueService.getIssues(page, limit, status, category, search);
+  return this.issueService.getIssues(page, limit, status, category, search, userId);
 }
 
 

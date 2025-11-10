@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Issue } from './entities/issue.entity';
 import { S3Service } from 'src/s3/s3.service';
+import { ServiceService } from 'src/service/service.service';
 
 @Injectable()
 export class IssueService
@@ -17,7 +18,9 @@ export class IssueService
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
 
-    private readonly s3Service: S3Service
+    private readonly s3Service: S3Service,
+
+    private readonly svc: ServiceService
   ) { }
 
   async create(createIssueDto: CreateIssueDto)
@@ -40,34 +43,52 @@ export class IssueService
     return this.issueRepo.save(issue);
   }
 
-async getIssues(page: number, limit: number, status?: string, category?: string, search?: string) {
-  const skip = (page - 1) * limit;
+  async getIssues(page: number, limit: number, status?: string, category?: string, search?: string, userId?: number)
+  {
+    const skip = (page - 1) * limit;
 
-  const queryBuilder = this.issueRepo
-    .createQueryBuilder("issue")
-    .leftJoinAndSelect("issue.createdBy", "createdBy")
-    .orderBy("issue.createdAt", "DESC")
-    .skip(skip)
-    .take(limit);
+    // Retrieve the list of service IDs for the current user
+    const userServices = await this.svc.getAllServicesForUser(userId!);
+    const userServiceIds = userServices.map(service => service.serviceID); // Extract service IDs
 
-  if (status && status !== "all") {
-    queryBuilder.andWhere("issue.status = :status", { status });
-  }
+    const queryBuilder = this.issueRepo
+      .createQueryBuilder("issue")
+      .leftJoinAndSelect("issue.createdBy", "createdBy")
+      .leftJoinAndSelect("issue.service", "service") // Join the service to filter on it
+      .orderBy("issue.createdAt", "DESC")
+      .skip(skip)
+      .take(limit);
 
-  if (category && category !== "all") {
-    queryBuilder.andWhere("issue.category = :category", { category });
-  }
+    // Filter by status if provided
+    if (status && status !== "all")
+    {
+      queryBuilder.andWhere("issue.status = :status", { status });
+    }
 
-  if (search) {
+    // Check if a category is provided and filter by it
+    if (category && category !== "all")
+    {
+      queryBuilder.andWhere("issue.category = :category", { category });
+    }
+
+    // Filter issues based on service-related logic
     queryBuilder.andWhere(
-      "(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)",
-      { search: `%${search.toLowerCase()}%` }
+      "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
+      { userServiceIds }
     );
-  }
 
-  const issues = await queryBuilder.getMany();
-  return issues;
-}
+    // Filter by search term if provided
+    if (search)
+    {
+      queryBuilder.andWhere(
+        "(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)",
+        { search: `%${search.toLowerCase()}%` }
+      );
+    }
+
+    const issues = await queryBuilder.getMany();
+    return issues;
+  }
 
 
   async findOne(id: number)
@@ -156,33 +177,55 @@ async getIssues(page: number, limit: number, status?: string, category?: string,
     return { message: `Issue #${id} deleted` };
   }
 
-async countIssues(status?: string, category?: string, searchQuery?: string): Promise<number> {
-  const queryBuilder = this.issueRepo.createQueryBuilder('issue');
+  async countIssues(status?: string, category?: string, searchQuery?: string, userId?: number): Promise<number>
+  {
+    const queryBuilder = this.issueRepo.createQueryBuilder('issue');
 
-  if (status && status !== 'all') {
-    queryBuilder.andWhere('issue.status = :status', { status });
-  }
+    // Retrieve the list of service IDs for the current user
+    const userServices = await this.svc.getAllServicesForUser(userId!);
+    const userServiceIds = userServices.map(service => service.serviceID); // Extract service IDs
 
-  if (category && category !== 'all') {
-    queryBuilder.andWhere('issue.category = :category', { category });
-  }
+    // Join the service table to filter on it
+    queryBuilder.leftJoin("issue.service", "service");
 
-  if (searchQuery) {
+    // Filter by status if provided
+    if (status && status !== 'all')
+    {
+      queryBuilder.andWhere('issue.status = :status', { status });
+    }
+
+    // Check if a category is provided and filter by it
+    if (category && category !== 'all')
+    {
+      queryBuilder.andWhere('issue.category = :category', { category });
+    }
+
+    // Filter issues based on service-related logic
     queryBuilder.andWhere(
-      '(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)',
-      { search: `%${searchQuery.toLowerCase()}%` }
+      "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
+      { userServiceIds }
     );
+
+    // Filter by search term if provided
+    if (searchQuery)
+    {
+      queryBuilder.andWhere(
+        '(LOWER(issue.title) LIKE :search OR LOWER(issue.description) LIKE :search)',
+        { search: `%${searchQuery.toLowerCase()}%` }
+      );
+    }
+
+    return queryBuilder.getCount();
   }
 
-  return queryBuilder.getCount();
-}
-async updateStatus(id: number, status: string) {
-  const issue = await this.issueRepo.findOne({ where: { id } });
-  if (!issue) throw new NotFoundException(`Issue #${id} not found`);
+  async updateStatus(id: number, status: string)
+  {
+    const issue = await this.issueRepo.findOne({ where: { id } });
+    if (!issue) throw new NotFoundException(`Issue #${id} not found`);
 
-  issue.status = status;
-  return this.issueRepo.save(issue);
-}
+    issue.status = status;
+    return this.issueRepo.save(issue);
+  }
 
 
 }
