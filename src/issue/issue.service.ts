@@ -49,12 +49,12 @@ export class IssueService
 
     // Retrieve the list of service IDs for the current user
     const userServices = await this.svc.getAllServicesForUser(userId!);
-    const userServiceIds = userServices.map(service => service.serviceID); // Extract service IDs
+    const userServiceIds = userServices.length !== 0 ? userServices.map(service => service.serviceID) : [];
 
     const queryBuilder = this.issueRepo
       .createQueryBuilder("issue")
       .leftJoinAndSelect("issue.createdBy", "createdBy")
-      .leftJoinAndSelect("issue.service", "service") // Join the service to filter on it
+      // Only join the service table if there are service IDs to filter
       .orderBy("issue.createdAt", "DESC")
       .skip(skip)
       .take(limit);
@@ -72,10 +72,19 @@ export class IssueService
     }
 
     // Filter issues based on service-related logic
-    queryBuilder.andWhere(
-      "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
-      { userServiceIds }
-    );
+    if (userServiceIds.length > 0)
+    {
+      queryBuilder
+        .leftJoinAndSelect("issue.service", "service") // Join only when filtering by service IDs
+        .andWhere(
+          "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
+          { userServiceIds }
+        );
+    } else
+    {
+      // If userServiceIds is empty, only show issues that are not categorized as 'Service'
+      queryBuilder.andWhere("issue.category <> 'Service'");
+    }
 
     // Filter by search term if provided
     if (search)
@@ -89,7 +98,6 @@ export class IssueService
     const issues = await queryBuilder.getMany();
     return issues;
   }
-
 
   async findOne(id: number)
   {
@@ -201,10 +209,17 @@ export class IssueService
     }
 
     // Filter issues based on service-related logic
-    queryBuilder.andWhere(
-      "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
-      { userServiceIds }
-    );
+    if (userServiceIds.length > 0)
+    {
+      queryBuilder.andWhere(
+        "(issue.category <> 'Service' OR (issue.category = 'Service' AND service.serviceID IN (:...userServiceIds)))",
+        { userServiceIds }
+      );
+    } else
+    {
+      // If userServiceIds is empty, only show issues that are not categorized as 'Service'
+      queryBuilder.andWhere("issue.category <> 'Service'");
+    }
 
     // Filter by search term if provided
     if (searchQuery)

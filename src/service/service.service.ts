@@ -164,8 +164,10 @@ export class ServiceService {
     return this.svcRepo.save(svc);
   }
 
-  async getAllServicesForUser(userId: number): Promise<Service[]> {
-    return this.svcRepo
+  // ✅ GET ALL SERVICES FOR USER
+  async getAllServicesForUser(userId: number): Promise<Service[]>
+  {
+    const services = await this.svcRepo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.chief', 'chief')
       .leftJoinAndSelect('service.projectManager', 'projectManager')
@@ -174,9 +176,11 @@ export class ServiceService {
       .leftJoinAndSelect('service.taskBoard', 'taskBoard')
       .where(
         'chief.id = :userId OR projectManager.id = :userId OR assignedResources.id = :userId OR backup.id = :userId',
-        { userId },
+        { userId }
       )
       .getMany();
+
+    return services;
   }
 
   async remove(id: number): Promise<void> {
