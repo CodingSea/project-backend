@@ -26,7 +26,6 @@ export class CreateUserDto {
   @IsEmail({}, { message: 'Please provide a valid Email.' })
   email: string;
 
-  @IsNotEmpty()
   @Matches(passwordRegEx, {
     message: `Password must contain between 5 and 20 characters, 
 at least one uppercase letter, one lowercase letter, and one number.`,

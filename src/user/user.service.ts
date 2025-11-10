@@ -8,15 +8,17 @@ import bcrypt from 'bcrypt';
 import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
-export class UserService {
+export class UserService
+{
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly s3Service: S3Service,
-  ) {}
+  ) { }
 
   // ✅ Create new user
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto)
+  {
     const user = new User();
     user.first_name = createUserDto.first_name;
     user.last_name = createUserDto.last_name;
@@ -30,22 +32,36 @@ export class UserService {
     return this.userRepository.save(user);
   }
 
+  async createMultipleUsers(createUserDtos: CreateUserDto[])
+  {
+    for (let i = 0; i < createUserDtos.length; i++)
+    {
+      const element = createUserDtos[ i ];
+
+      this.create(element);
+    }
+  }
+
   // ✅ Get all users
-  findAll() {
+  findAll()
+  {
     return this.userRepository.find();
   }
 
   // ✅ Get all developers (with signed profile images)
-  async findAllDevelopers(searchTerm?: string): Promise<User[]> {
+  async findAllDevelopers(searchTerm?: string): Promise<User[]>
+  {
     const queryBuilder = this.userRepository.createQueryBuilder('user');
 
-    if (searchTerm) {
+    if (searchTerm)
+    {
       const search = `%${searchTerm.toLowerCase()}%`;
       queryBuilder.where(
         '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search)) AND user.role = :role',
         { search, role: 'developer' },
       );
-    } else {
+    } else
+    {
       queryBuilder.where('user.role = :role', { role: 'developer' });
     }
 
@@ -53,9 +69,12 @@ export class UserService {
 
     // Attach signed URLs safely
     const updatedDevelopers = await Promise.all(
-      developers.map(async (dev) => {
-        if (dev.profileImageID) {
-          try {
+      developers.map(async (dev) =>
+      {
+        if (dev.profileImageID)
+        {
+          try
+          {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
           } catch {
             dev.profileImage = null;
@@ -69,12 +88,15 @@ export class UserService {
   }
 
   // ✅ Get one user (with signed image URL)
-  async findOne(id: number) {
+  async findOne(id: number)
+  {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) return null;
 
-    if (user.profileImageID) {
-      try {
+    if (user.profileImageID)
+    {
+      try
+      {
         user.profileImage = await this.s3Service.getSignedUrl(user.profileImageID);
       } catch {
         user.profileImage = null;
@@ -85,12 +107,14 @@ export class UserService {
   }
 
   // ✅ Find by email
-  findByEmail(email: string) {
+  findByEmail(email: string)
+  {
     return this.userRepository.findOne({ where: { email } });
   }
 
   // ✅ Update user info
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update(id: number, updateUserDto: UpdateUserDto)
+  {
     const user = new User();
     user.id = id;
     user.first_name = updateUserDto.first_name;
@@ -102,20 +126,25 @@ export class UserService {
   }
 
   // ✅ Delete user
-  remove(id: number) {
+  remove(id: number)
+  {
     return this.userRepository.delete(id);
   }
 
   // ✅ Upload / update profile image (delete old)
-  async updateProfileImage(userId: number, imageUrl: string, imageKey: string) {
+  async updateProfileImage(userId: number, imageUrl: string, imageKey: string)
+  {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
-    if (user.profileImageID && user.profileImageID !== imageKey) {
-      try {
+    if (user.profileImageID && user.profileImageID !== imageKey)
+    {
+      try
+      {
         await this.s3Service.deleteFile(user.profileImageID);
         console.log(`🗑️ Deleted old profile image: ${user.profileImageID}`);
-      } catch (err) {
+      } catch (err)
+      {
         console.warn(`⚠️ Failed to delete old image: ${err.message}`);
       }
     }
@@ -126,11 +155,13 @@ export class UserService {
   }
 
   // ✅ Delete user profile image
-  async deleteProfileImage(userId: number) {
+  async deleteProfileImage(userId: number)
+  {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new Error('User not found');
 
-    if (user.profileImageID) {
+    if (user.profileImageID)
+    {
       await this.s3Service.deleteFile(user.profileImageID);
       user.profileImage = null;
       user.profileImageID = null;
