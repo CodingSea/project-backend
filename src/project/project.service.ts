@@ -1,110 +1,160 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { Project } from './entities/project.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
 import { ServiceService } from 'src/service/service.service';
 import { Service } from 'src/service/entities/service.entity';
 
 @Injectable()
-export class ProjectService
-{
+export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
-    private readonly serviceRepository: ServiceService
-  ) { }
+    private readonly serviceRepository: ServiceService,
+  ) {}
 
-  // ✅ Create new project
-  async create(createProjectDto: CreateProjectDto): Promise<Project>
-  {
+  // Create new project
+  async create(createProjectDto: CreateProjectDto): Promise<Project> {
     const project = this.projectRepository.create(createProjectDto);
     return this.projectRepository.save(project);
   }
 
-  // ✅ Get all projects
-  async findAll(): Promise<Project[]>
-  {
-    return this.projectRepository.find(
-      {
-        relations: [
-          'services',
-          'services.taskBoard',
-          'services.taskBoard.cards',
-          'services.projectManager',
-          'services.chief',
-          'services.backup',
-          'services.assignedResources'
-        ]
-      }
-    );
-  }
-
-  async findOne(id: number): Promise<Project>
-  {
-    const project = await this.projectRepository.findOne({
-      where: { projectID: id },
-      relations: [ 'services',
+  //  Get ALL projects (original behavior)
+  async findAll(): Promise<Project[]> {
+    return this.projectRepository.find({
+      relations: [
+        'services',
         'services.taskBoard',
         'services.taskBoard.cards',
         'services.projectManager',
         'services.chief',
         'services.backup',
-        'services.assignedResources' ],
+        'services.assignedResources',
+      ],
     });
-
-    if (!project)
-    {
-      throw new NotFoundException(`Project ${id} not found`);
-    }
-
-    // Sort services by deadline (ascending order)
-    project.services.sort((a, b) =>
-    {
-      const deadlineA = a.deadline ? new Date(a.deadline).getTime() : Infinity; // Handle undefined deadlines
-      const deadlineB = b.deadline ? new Date(b.deadline).getTime() : Infinity; // Handle undefined deadlines
-      return deadlineA - deadlineB; // Ascending order
-    });
-
-    return project;
   }
 
+  // Paged + filtered projects for listing UI
+  async getProjects(
+    page: number,
+    limit: number,
+    status?: string,
+    search?: string,
+  ): Promise<Project[]> {
+    const qb = this.projectRepository
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.services', 'service')
+      .leftJoinAndSelect('service.taskBoard', 'taskBoard')
+      .leftJoinAndSelect('taskBoard.cards', 'card')
+      .leftJoinAndSelect('service.projectManager', 'projectManager')
+      .leftJoinAndSelect('service.chief', 'chief')
+      .leftJoinAndSelect('service.backup', 'backup')
+      .leftJoinAndSelect('service.assignedResources', 'assignedResources')
+      .orderBy('project.projectID', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
-  // ✅ Update project by ID
-  async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project>
-  {
-    await this.projectRepository.update(id, updateProjectDto);
-    const project = await this.projectRepository.findOneBy({ projectID: id });
-    if (!project)
-    {
-      throw new NotFoundException(`Project ${id} not found`);
+    // status filter (case-insensitive, ignore "all")
+    if (status && status.toLowerCase() !== 'all') {
+      qb.andWhere('LOWER(project.status) = :status', {
+        status: status.toLowerCase(),
+      });
     }
-    return project;
+
+    // search by name / description
+    if (search) {
+      const s = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(project.name) LIKE :s OR LOWER(project.description) LIKE :s)',
+        { s },
+      );
+    }
+
+    return qb.getMany();
   }
 
+  // count for pagination
+  async countProjects(status?: string, search?: string): Promise<number> {
+    const qb = this.projectRepository.createQueryBuilder('project');
 
-  // ✅ Delete project
-  async remove(id: number): Promise<void>
-  {
+    if (status && status.toLowerCase() !== 'all') {
+      qb.andWhere('LOWER(project.status) = :status', {
+        status: status.toLowerCase(),
+      });
+    }
+
+    if (search) {
+      const s = `%${search.toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(project.name) LIKE :s OR LOWER(project.description) LIKE :s)',
+        { s },
+      );
+    }
+
+    return qb.getCount();
+  }
+
+  //Get one project
+  async findOne(id: number): Promise<Project> {
     const project = await this.projectRepository.findOne({
       where: { projectID: id },
-      relations: [ 'services' ], // Load services for the project
+      relations: [
+        'services',
+        'services.taskBoard',
+        'services.taskBoard.cards',
+        'services.projectManager',
+        'services.chief',
+        'services.backup',
+        'services.assignedResources',
+      ],
     });
 
-    if (!project)
-    {
+    if (!project) {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+
+    // sort services by nearest deadline
+    project.services.sort((a: Service, b: Service) => {
+      const deadlineA = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const deadlineB = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      return deadlineA - deadlineB;
+    });
+
+    return project;
+  }
+
+  //  Update project
+  async update(id: number, updateProjectDto: UpdateProjectDto): Promise<Project> {
+    await this.projectRepository.update(id, updateProjectDto);
+    const project = await this.projectRepository.findOneBy({ projectID: id });
+
+    if (!project) {
+      throw new NotFoundException(`Project ${id} not found`);
+    }
+
+    return project;
+  }
+
+  //  Delete project + its services
+  async remove(id: number): Promise<void> {
+    const project = await this.projectRepository.findOne({
+      where: { projectID: id },
+      relations: ['services'],
+    });
+
+    if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
 
-    // Delete associated services
-    for (const service of project.services)
-    {
-      await this.serviceRepository.remove(service.serviceID); // Assuming service has an `id` property
+    for (const service of project.services) {
+      await this.serviceRepository.remove(service.serviceID);
     }
 
-    // Now delete the project itself
     await this.projectRepository.delete(id);
   }
 }
