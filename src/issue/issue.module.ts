@@ -7,12 +7,14 @@ import { Feedback } from 'src/feedback/entities/feedback.entity';
 import { User } from 'src/user/entities/user.entity';
 import { S3Module } from 'src/s3/s3.module';
 import { FeedbackModule } from 'src/feedback/feedback.module'; 
+import { ServiceModule } from 'src/service/service.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Issue, Feedback, User]),
     S3Module,
     FeedbackModule,
+    ServiceModule
   ],
   controllers: [IssueController],
   providers: [IssueService],
