@@ -45,6 +45,6 @@ export class User
   issues: Issue[];
 
   // Define a many-to-many relationship with Card
-  @ManyToMany(() => Card, (card) => card.users, { eager: true }) // Eager loading to fetch cards automatically
-  cards: Card[]; // Array of cards associated with this user
+  @ManyToMany(() => Card, (card) => card.users, { nullable: true }) // Eager loading to fetch cards automatically
+  cards?: Card[]; // Array of cards associated with this user
 }

@@ -52,9 +52,9 @@ export class Card
       referencedColumnName: 'id',
     },
   })
-  users: User[]; // Array of users associated with this card
+  users?: User[]; // Array of users associated with this card
 
-  @ManyToOne(() => User, { nullable: true, eager: true })
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'assignedUserId' })
   assignedUser?: User;
 }
