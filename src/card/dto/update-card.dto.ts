@@ -1,5 +1,11 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
-import { Comment } from "src/comment/entities/comment.entity";
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { Comment } from 'src/comment/entities/comment.entity';
 
 export class UpdateCardDto {
   @IsOptional()
@@ -30,8 +36,9 @@ export class UpdateCardDto {
   @IsString()
   color?: string;
 
-  // ✅ NEW — optional assigned user ID
+  // ✅ Multiple assigned users (optional; empty array = unassign all)
   @IsOptional()
-  @IsNumber()
-  assignedUserId?: number;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  assignedUserIds?: number[];
 }

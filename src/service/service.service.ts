@@ -89,23 +89,34 @@ export class ServiceService {
     });
   }
 
-  async findAllFiltered(search?: string, status?: string): Promise<Service[]> {
+  // ✅ UPDATED: Supports "hasTasks" filter
+  async findAllFiltered(search?: string, status?: string, hasTasks?: string): Promise<Service[]> {
     const qb = this.svcRepo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.project', 'project')
       .leftJoinAndSelect('service.chief', 'chief')
       .leftJoinAndSelect('service.projectManager', 'projectManager')
       .leftJoinAndSelect('service.assignedResources', 'assignedResources')
+      .leftJoinAndSelect('service.taskBoard', 'taskBoard')
+      .leftJoinAndSelect('taskBoard.cards', 'cards')
       .orderBy('service.serviceID', 'DESC');
 
     if (search) {
-      qb.andWhere('(LOWER(service.name) LIKE LOWER(:search) OR LOWER(service.description) LIKE LOWER(:search))', {
-        search: `%${search}%`,
-      });
+      qb.andWhere(
+        '(LOWER(service.name) LIKE LOWER(:search) OR LOWER(service.description) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
     }
 
     if (status) {
       qb.andWhere('service.status = :status', { status });
+    }
+
+    // 🟩 New Filter: Has Tasks
+    if (hasTasks === 'true') {
+      qb.andWhere('cards.id IS NOT NULL');
+    } else if (hasTasks === 'false') {
+      qb.andWhere('cards.id IS NULL');
     }
 
     return qb.getMany();
@@ -164,9 +175,7 @@ export class ServiceService {
     return this.svcRepo.save(svc);
   }
 
-  // ✅ GET ALL SERVICES FOR USER
-  async getAllServicesForUser(userId: number): Promise<Service[]>
-  {
+  async getAllServicesForUser(userId: number): Promise<Service[]> {
     const services = await this.svcRepo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.chief', 'chief')
@@ -176,7 +185,7 @@ export class ServiceService {
       .leftJoinAndSelect('service.taskBoard', 'taskBoard')
       .where(
         'chief.id = :userId OR projectManager.id = :userId OR assignedResources.id = :userId OR backup.id = :userId',
-        { userId }
+        { userId },
       )
       .getMany();
 

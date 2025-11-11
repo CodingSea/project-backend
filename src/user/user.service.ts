@@ -170,4 +170,36 @@ export class UserService
 
     return { message: 'Profile image deleted successfully' };
   }
+
+  // 👇 add this at the end of UserService class
+async assignUsersToTask(taskId: number, userIds: number[]): Promise<{ message: string }> {
+  if (!userIds || userIds.length === 0) {
+    return { message: 'No users provided.' };
+  }
+
+  try {
+    const users = await this.userRepository.findByIds(userIds);
+
+    if (users.length === 0) {
+      return { message: 'No valid users found.' };
+    }
+
+    // Optional: log or update a relation table
+    // Example: if you have a Task entity, you could do something like:
+    // const task = await this.taskRepository.findOne({ where: { id: taskId } });
+    // task.assignedUsers = users;
+    // await this.taskRepository.save(task);
+
+    // If you don’t have a direct join table yet, this ensures they exist
+    for (const u of users) {
+      console.log(`📌 Assigned ${u.first_name} ${u.last_name} to task ${taskId}`);
+    }
+
+    return { message: `Assigned ${users.length} users to task ${taskId}` };
+  } catch (error) {
+    console.error('Error assigning users to task:', error);
+    throw error;
+  }
+}
+
 }

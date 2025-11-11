@@ -101,4 +101,12 @@ export class UserController
   {
     return this.userService.deleteProfileImage(id);
   }
+
+  @Post('assign-task/:taskId')
+async assignUsersToTask(
+  @Param('taskId') taskId: number,
+  @Body('userIds') userIds: number[]
+) {
+  return this.userService.assignUsersToTask(taskId, userIds);
+}
 }

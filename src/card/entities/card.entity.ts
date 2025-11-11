@@ -4,11 +4,13 @@ import {
   Column,
   ManyToOne,
   OneToMany,
+  ManyToMany,
   JoinColumn,
+  JoinTable,
 } from 'typeorm';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Comment } from 'src/comment/entities/comment.entity';
-import { User } from 'src/user/entities/user.entity'; // ✅ Import User entity
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
 export class Card {
@@ -24,7 +26,9 @@ export class Card {
   @Column({ nullable: true })
   description: string;
 
-  @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards, { onDelete: 'CASCADE' })
+  @ManyToOne(() => TaskBoard, (taskBoard) => taskBoard.cards, {
+    onDelete: 'CASCADE',
+  })
   taskBoard: TaskBoard;
 
   @Column('varchar', { array: true, nullable: true })
@@ -36,8 +40,14 @@ export class Card {
   @Column({ nullable: true })
   color: string;
 
-  // ✅ NEW — Assigned User (nullable, eager loaded)
-  @ManyToOne(() => User, { nullable: true, eager: true })
-  @JoinColumn({ name: 'assignedUserId' })
-  assignedUser?: User;
+  // ✅ Multiple assigned users
+  @ManyToMany(() => User, { eager: true })
+  @JoinTable({
+    name: 'card_assigned_users',
+    joinColumn: { name: 'cardId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'userId', referencedColumnName: 'id' },
+  })
+  assignedUsers?: User[];
+
+  // (If you want to keep comments relation here, add it, you didn't include it in the snippet)
 }
