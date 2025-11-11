@@ -4,10 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { TasksController } from './tasks.controller';
 import { Card } from 'src/card/entities/card.entity';
-
+import { User } from 'src/user/entities/user.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ TaskBoard, Card ]), // Ensure both entities are imported
+    TypeOrmModule.forFeature([ TaskBoard, Card,User ]), // Ensure both entities are imported
   ],
   providers: [ TasksService ],
   controllers: [ TasksController ],

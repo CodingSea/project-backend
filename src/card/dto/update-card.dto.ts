@@ -1,35 +1,37 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateCardDto } from './create-card.dto';
 import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 import { Comment } from "src/comment/entities/comment.entity";
 
-export class UpdateCardDto
-{
+export class UpdateCardDto {
+  @IsOptional()
+  @IsString()
+  column?: string;
 
-    @IsNotEmpty()
-    @IsString()
-    column: string;
+  @IsOptional()
+  @IsString()
+  title?: string;
 
-    @IsNotEmpty()
-    @IsString()
-    title: string;
+  @IsOptional()
+  @IsString()
+  description?: string;
 
-    @IsOptional()
-    @IsString()
-    description: string;
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    tags: string[];
+  @IsOptional()
+  comments?: Comment[];
 
-    comments: Comment[];
+  @IsOptional()
+  @IsNumber()
+  order?: number;
 
-    @IsNotEmpty()
-    @IsNumber()
-    order: number;
+  @IsOptional()
+  @IsString()
+  color?: string;
 
-    @IsOptional()
-    @IsString()
-    color: string;
+  // ✅ NEW — optional assigned user ID
+  @IsOptional()
+  @IsNumber()
+  assignedUserId?: number;
 }
