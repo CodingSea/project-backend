@@ -55,6 +55,12 @@ export class UserController
     return this.userService.findAllDevelopers(search);
   }
 
+  @Get('developers-card')
+  async getDevelopersCard(@Query('search') search: string): Promise<User[]>
+  {
+    return this.userService.findAllDeveloperCards();
+  }
+
   //  Get Single User (with signed profile image)
   @Get(':id')
   findOne(@Param('id') id: string)

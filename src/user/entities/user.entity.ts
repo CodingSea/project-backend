@@ -1,7 +1,9 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany } from "typeorm";
-import { Certificate } from "src/certificate/entities/certificate.entity";
-import { Service } from "src/service/entities/service.entity";
-import { Issue } from "src/issue/entities/issue.entity"; // Import the Issue entity
+// user.entity.ts
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToMany } from 'typeorm';
+import { Certificate } from 'src/certificate/entities/certificate.entity';
+import { Service } from 'src/service/entities/service.entity';
+import { Issue } from 'src/issue/entities/issue.entity';
+import { Card } from 'src/card/entities/card.entity'; // Import Card entity
 
 @Entity()
 export class User
@@ -40,5 +42,9 @@ export class User
   chiefServices: Service[];
 
   @OneToMany(() => Issue, issue => issue.createdBy) // Relationship with Issue
-  issues: Issue[]; // Add this line to establish the relationship
+  issues: Issue[];
+
+  // Define a many-to-many relationship with Card
+  @ManyToMany(() => Card, (card) => card.users, { eager: true }) // Eager loading to fetch cards automatically
+  cards: Card[]; // Array of cards associated with this user
 }

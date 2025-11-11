@@ -1,17 +1,20 @@
-import {
+// card.entity.ts
+import
+{
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToMany,
+  JoinTable,
   ManyToOne,
-  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
-import { Comment } from 'src/comment/entities/comment.entity';
-import { User } from 'src/user/entities/user.entity'; // ✅ Import User entity
+import { User } from 'src/user/entities/user.entity';
 
 @Entity()
-export class Card {
+export class Card
+{
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -36,7 +39,21 @@ export class Card {
   @Column({ nullable: true })
   color: string;
 
-  // ✅ NEW — Assigned User (nullable, eager loaded)
+  // Define a many-to-many relationship with User
+  @ManyToMany(() => User, (user) => user.cards, {nullable: true}) // Remove eager loading
+  @JoinTable({
+    name: 'user_card', // Name of the join table
+    joinColumn: {
+      name: 'card_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id',
+    },
+  })
+  users: User[]; // Array of users associated with this card
+
   @ManyToOne(() => User, { nullable: true, eager: true })
   @JoinColumn({ name: 'assignedUserId' })
   assignedUser?: User;
