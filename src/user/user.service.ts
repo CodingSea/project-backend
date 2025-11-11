@@ -87,6 +87,44 @@ export class UserService
     return updatedDevelopers;
   }
 
+  async findAllDeveloperCards(searchTerm?: string): Promise<User[]>
+  {
+    const queryBuilder = this.userRepository.createQueryBuilder('user');
+
+    if (searchTerm)
+    {
+      const search = `%${searchTerm.toLowerCase()}%`;
+      queryBuilder.where(
+        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search)) AND user.role = :role',
+        { search, role: 'developer' },
+      );
+    } else
+    {
+      queryBuilder.where('user.role = :role', { role: 'developer' });
+    }
+
+    const developers = await queryBuilder.getMany();
+
+    // Attach signed URLs safely
+    const updatedDevelopers = await Promise.all(
+      developers.map(async (dev) =>
+      {
+        if (dev.profileImageID)
+        {
+          try
+          {
+            dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
+          } catch {
+            dev.profileImage = null;
+          }
+        }
+        return dev;
+      }),
+    );
+
+    return updatedDevelopers;
+  }
+
   // ✅ Get one user (with signed image URL)
   async findOne(id: number)
   {
