@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import
   {
     Controller,
@@ -18,6 +19,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { S3Service } from 'src/s3/s3.service';
 import { User } from './entities/user.entity';
+import { Card } from 'src/card/entities/card.entity';
 
 @Controller('user')
 export class UserController
@@ -58,7 +60,13 @@ export class UserController
   @Get('developers-card')
   async getDevelopersCard(@Query('search') search: string): Promise<User[]>
   {
-    return this.userService.findAllDeveloperCards();
+    return this.userService.findAllDevelopersWithCards(search);
+  }
+
+  @Post('developers-task')
+  async getDevelopersTasks(@Body() developerIds: number[]): Promise<Card[]>
+  {
+    return this.userService.findTasksByUserIds(developerIds);
   }
 
   //  Get Single User (with signed profile image)

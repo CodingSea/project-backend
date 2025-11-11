@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
 import { S3Service } from 'src/s3/s3.service';
+import { Card } from 'src/card/entities/card.entity';
 
 @Injectable()
 export class UserService
@@ -13,7 +19,11 @@ export class UserService
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
     private readonly s3Service: S3Service,
+
+    @InjectRepository(Card)
+    private readonly cardRepository: Repository<Card>,
   ) { }
 
   // ✅ Create new user
@@ -36,7 +46,7 @@ export class UserService
   {
     for (let i = 0; i < createUserDtos.length; i++)
     {
-      const element = createUserDtos[ i ];
+      const element = createUserDtos[i];
 
       this.create(element);
     }
@@ -76,7 +86,8 @@ export class UserService
           try
           {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch {
+          } catch
+          {
             dev.profileImage = null;
           }
         }
@@ -87,34 +98,36 @@ export class UserService
     return updatedDevelopers;
   }
 
-  async findAllDeveloperCards(searchTerm?: string): Promise<User[]>
+  async findAllDevelopersWithCards(searchTerm?: string): Promise<User[]>
   {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
+      .where('user.role = :role', { role: 'developer' });
 
+    // If there's a search term, filter by user name or skills
     if (searchTerm)
     {
       const search = `%${searchTerm.toLowerCase()}%`;
-      queryBuilder.where(
-        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search)) AND user.role = :role',
-        { search, role: 'developer' },
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search))',
+        { search }
       );
-    } else
-    {
-      queryBuilder.where('user.role = :role', { role: 'developer' });
     }
 
-    const developers = await queryBuilder.getMany();
+    // Execute the query to get users with their associated cards
+    const developersWithCards = await queryBuilder.getMany();
 
-    // Attach signed URLs safely
+    // Optionally, you can process developers to include signed URLs for profile images
     const updatedDevelopers = await Promise.all(
-      developers.map(async (dev) =>
+      developersWithCards.map(async (dev) =>
       {
         if (dev.profileImageID)
         {
           try
           {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch {
+          } catch
+          {
             dev.profileImage = null;
           }
         }
@@ -122,7 +135,25 @@ export class UserService
       }),
     );
 
-    return updatedDevelopers;
+    return updatedDevelopers; // Return users with their tasks
+  }
+
+  async findTasksByUserIds(userIds: number[]): Promise<Card[]>
+  {
+    if (userIds.length === 0)
+    {
+      return []; // Return an empty array if no user IDs are provided
+    }
+
+    // Create a query builder to fetch tasks associated with the user IDs
+    const queryBuilder = this.cardRepository.createQueryBuilder('card')
+      .innerJoin('card.users', 'user') // Join to the user table via the join table
+      .where('user.id IN (:...userIds)', { userIds }); // Filter by user IDs
+
+    // Execute the query to get all relevant task cards
+    const tasks = await queryBuilder.getMany();
+
+    return tasks; // Return the list of task cards
   }
 
   // ✅ Get one user (with signed image URL)
@@ -136,7 +167,8 @@ export class UserService
       try
       {
         user.profileImage = await this.s3Service.getSignedUrl(user.profileImageID);
-      } catch {
+      } catch
+      {
         user.profileImage = null;
       }
     }
