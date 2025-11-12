@@ -30,10 +30,7 @@ export class CreateCardDto {
   @IsString()
   color?: string;
 
-  // ✅ Single assigned user (as in fahad-8)
-  @IsOptional()
-  @IsNumber()
-  assignedUserId?: number;
+
 
   // ✅ Support multiple user objects for future flexibility
   @IsOptional()

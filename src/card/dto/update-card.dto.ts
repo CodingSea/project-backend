@@ -37,10 +37,7 @@ export class UpdateCardDto {
   @IsString()
   color?: string;
 
-  // ✅ Single assigned user (like CreateCardDto)
-  @IsOptional()
-  @IsNumber()
-  assignedUserId?: number;
+
 
   // ✅ Optional multiple users (many-to-many)
   @IsOptional()

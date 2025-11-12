@@ -48,8 +48,5 @@ export class Card {
   })
   users?: User[];
 
-  // ✅ Single assigned user for main responsibility
-  @ManyToOne(() => User, { nullable: true })
-  @JoinColumn({ name: 'assignedUserId' })
-  assignedUser?: User;
+
 }
