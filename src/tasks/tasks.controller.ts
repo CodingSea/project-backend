@@ -11,10 +11,11 @@ export class TasksController
 
     // Create a TaskBoard
     @Post('task-board')
-    async createTaskBoard(@Body('id') id: number): Promise<TaskBoard>
+    async createTaskBoard(@Body('id') serviceId: number): Promise<TaskBoard>
     {
-        return this.tasksService.createTaskBoard(id);
+        return this.tasksService.createTaskBoard(serviceId);
     }
+
 
     // Get All TaskBoards
     @Get('task-boards')
@@ -49,7 +50,8 @@ export class TasksController
     async createCard(
         @Param('taskBoardId') taskBoardId: number,
         @Body() createCardDto: CreateCardDto // Accept the DTO directly
-    ): Promise<Card> {
+    ): Promise<Card>
+    {
         return this.tasksService.createCard(taskBoardId, createCardDto);
     }
 
