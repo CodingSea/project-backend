@@ -17,7 +17,7 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsArray()
-  tags: string[];
+  tags?: string[];
 
   @IsOptional()
   comments?: Comment[];
@@ -28,14 +28,15 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsString()
-  color: string;
+  color?: string;
 
-  // ✅ NEW — optional assigned user ID
+  // ✅ Single assigned user (as in fahad-8)
   @IsOptional()
   @IsNumber()
   assignedUserId?: number;
 
+  // ✅ Support multiple user objects for future flexibility
   @IsOptional()
-  @IsArray() 
+  @IsArray()
   users?: User[];
 }
