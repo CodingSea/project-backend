@@ -41,7 +41,7 @@ export class UserService
   {
     for (let i = 0; i < createUserDtos.length; i++)
     {
-      const element = createUserDtos[ i ];
+      const element = createUserDtos[i];
 
       this.create(element);
     }
@@ -136,10 +136,7 @@ export class UserService
     if (services)
     {
       const servicesSearch = `%${services.toLowerCase()}%`;
-      queryBuilder.andWhere(
-        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
-        { services: servicesSearch }
-      );
+      queryBuilder.andWhere('LOWER(service.name) LIKE :services', { services: servicesSearch });
     }
 
     // Filter by tasks if provided
@@ -323,34 +320,40 @@ export class UserService
   }
 
   // 👇 add this at the end of UserService class
-async assignUsersToTask(taskId: number, userIds: number[]): Promise<{ message: string }> {
-  if (!userIds || userIds.length === 0) {
-    return { message: 'No users provided.' };
-  }
-
-  try {
-    const users = await this.userRepository.findByIds(userIds);
-
-    if (users.length === 0) {
-      return { message: 'No valid users found.' };
+  async assignUsersToTask(taskId: number, userIds: number[]): Promise<{ message: string }>
+  {
+    if (!userIds || userIds.length === 0)
+    {
+      return { message: 'No users provided.' };
     }
 
-    // Optional: log or update a relation table
-    // Example: if you have a Task entity, you could do something like:
-    // const task = await this.taskRepository.findOne({ where: { id: taskId } });
-    // task.assignedUsers = users;
-    // await this.taskRepository.save(task);
+    try
+    {
+      const users = await this.userRepository.findByIds(userIds);
 
-    // If you don’t have a direct join table yet, this ensures they exist
-    for (const u of users) {
-      console.log(`📌 Assigned ${u.first_name} ${u.last_name} to task ${taskId}`);
+      if (users.length === 0)
+      {
+        return { message: 'No valid users found.' };
+      }
+
+      // Optional: log or update a relation table
+      // Example: if you have a Task entity, you could do something like:
+      // const task = await this.taskRepository.findOne({ where: { id: taskId } });
+      // task.assignedUsers = users;
+      // await this.taskRepository.save(task);
+
+      // If you don’t have a direct join table yet, this ensures they exist
+      for (const u of users)
+      {
+        console.log(`📌 Assigned ${u.first_name} ${u.last_name} to task ${taskId}`);
+      }
+
+      return { message: `Assigned ${users.length} users to task ${taskId}` };
+    } catch (error)
+    {
+      console.error('Error assigning users to task:', error);
+      throw error;
     }
-
-    return { message: `Assigned ${users.length} users to task ${taskId}` };
-  } catch (error) {
-    console.error('Error assigning users to task:', error);
-    throw error;
   }
-}
 
 }
