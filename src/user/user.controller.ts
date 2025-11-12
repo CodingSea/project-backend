@@ -1,17 +1,17 @@
 /* eslint-disable prettier/prettier */
 import
-  {
-    Controller,
-    Get,
-    Post,
-    Body,
-    Put,
-    Param,
-    Delete,
-    UploadedFile,
-    UseInterceptors,
-    Query,
-  } from '@nestjs/common';
+{
+  Controller,
+  Get,
+  Post,
+  Body,
+  Put,
+  Param,
+  Delete,
+  UploadedFile,
+  UseInterceptors,
+  Query,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -58,15 +58,33 @@ export class UserController
   }
 
   @Get('developers-card')
-  async getDevelopersCard(@Query('search') search: string): Promise<User[]>
+  async findAllDevelopers(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query('name') name?: string,
+    @Query('skills') skills?: string,
+    @Query('services') services?: string,
+    @Query('tasks') tasks?: string,
+  ): Promise<User[]>
   {
-    return this.userService.findAllDevelopersWithCards(search);
+    return this.userService.findAllDevelopersWithCards(page, limit, name, skills, services, tasks);
   }
 
   @Post('developers-task')
   async getDevelopersTasks(@Body() developerIds: number[]): Promise<Card[]>
   {
     return this.userService.findTasksByUserIds(developerIds);
+  }
+
+  @Get('developers-count')
+  async countDevelopers(
+    @Query('name') name?: string,
+    @Query('skills') skills?: string,
+    @Query('services') services?: string,
+    @Query('tasks') tasks?: string,
+  ): Promise<number>
+  {
+    return this.userService.countDevelopers(name, skills, services, tasks);
   }
 
   //  Get Single User (with signed profile image)

@@ -46,7 +46,7 @@ export class UserService
   {
     for (let i = 0; i < createUserDtos.length; i++)
     {
-      const element = createUserDtos[i];
+      const element = createUserDtos[ i ];
 
       this.create(element);
     }
@@ -98,26 +98,67 @@ export class UserService
     return updatedDevelopers;
   }
 
-  async findAllDevelopersWithCards(searchTerm?: string): Promise<User[]>
+  async findAllDevelopersWithCards(
+    page: number,
+    limit: number,
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<User[]>
   {
+    const skip = (page - 1) * limit;
+
     const queryBuilder = this.userRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
-      .where('user.role = :role', { role: 'developer' });
+      .where('user.role = :role', { role: 'developer' })
+      .skip(skip)
+      .take(limit); // Limit results
 
-    // If there's a search term, filter by user name or skills
-    if (searchTerm)
+    // Filter by name if provided
+    if (name)
     {
-      const search = `%${searchTerm.toLowerCase()}%`;
+      const nameSearch = `%${name.toLowerCase()}%`;
       queryBuilder.andWhere(
-        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search))',
-        { search }
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
+      );
+    }
+
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
+
+    // Filter by services if provided (assuming you have a service field or relationship)
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
+        { services: servicesSearch }
+      );
+    }
+
+    // Filter by tasks if provided (assuming you have a tasks field or relationship)
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        { tasks: tasksSearch }
       );
     }
 
     // Execute the query to get users with their associated cards
     const developersWithCards = await queryBuilder.getMany();
 
-    // Optionally, you can process developers to include signed URLs for profile images
+    // Optionally, process developers to include signed URLs for profile images
     const updatedDevelopers = await Promise.all(
       developersWithCards.map(async (dev) =>
       {
@@ -126,8 +167,7 @@ export class UserService
           try
           {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch
-          {
+          } catch {
             dev.profileImage = null;
           }
         }
@@ -154,6 +194,60 @@ export class UserService
     const tasks = await queryBuilder.getMany();
 
     return tasks; // Return the list of task cards
+  }
+
+  async countDevelopers(
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<number>
+  {
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .where('user.role = :role', { role: 'developer' });
+
+    // Filter by name if provided
+    if (name)
+    {
+      const nameSearch = `%${name.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
+      );
+    }
+
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
+
+    // Filter by services if provided
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
+        { services: servicesSearch }
+      );
+    }
+
+    // Filter by tasks if provided
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        { tasks: tasksSearch }
+      );
+    }
+
+    // Execute the count query
+    return queryBuilder.getCount(); // Still only fetching count, page and limit typically not needed here
   }
 
   // ✅ Get one user (with signed image URL)
