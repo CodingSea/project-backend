@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/require-await */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -6,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
 import { S3Service } from 'src/s3/s3.service';
+import { Card } from 'src/card/entities/card.entity';
 
 @Injectable()
 export class UserService
@@ -13,7 +19,11 @@ export class UserService
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
     private readonly s3Service: S3Service,
+
+    @InjectRepository(Card)
+    private readonly cardRepository: Repository<Card>,
   ) { }
 
   // ✅ Create new user
@@ -76,7 +86,8 @@ export class UserService
           try
           {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch {
+          } catch
+          {
             dev.profileImage = null;
           }
         }
@@ -87,27 +98,69 @@ export class UserService
     return updatedDevelopers;
   }
 
-  async findAllDeveloperCards(searchTerm?: string): Promise<User[]>
+  async findAllDevelopersWithCards(
+    page: number,
+    limit: number,
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<User[]>
   {
-    const queryBuilder = this.userRepository.createQueryBuilder('user');
+    const skip = (page - 1) * limit;
 
-    if (searchTerm)
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
+      .where('user.role = :role', { role: 'developer' })
+      .skip(skip)
+      .take(limit); // Limit results
+
+    // Filter by name if provided
+    if (name)
     {
-      const search = `%${searchTerm.toLowerCase()}%`;
-      queryBuilder.where(
-        '(LOWER(user.first_name) LIKE :search OR LOWER(user.last_name) LIKE :search OR EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :search)) AND user.role = :role',
-        { search, role: 'developer' },
+      const nameSearch = `%${name.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
       );
-    } else
-    {
-      queryBuilder.where('user.role = :role', { role: 'developer' });
     }
 
-    const developers = await queryBuilder.getMany();
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
 
-    // Attach signed URLs safely
+    // Filter by services if provided (assuming you have a service field or relationship)
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
+        { services: servicesSearch }
+      );
+    }
+
+    // Filter by tasks if provided (assuming you have a tasks field or relationship)
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        { tasks: tasksSearch }
+      );
+    }
+
+    // Execute the query to get users with their associated cards
+    const developersWithCards = await queryBuilder.getMany();
+
+    // Optionally, process developers to include signed URLs for profile images
     const updatedDevelopers = await Promise.all(
-      developers.map(async (dev) =>
+      developersWithCards.map(async (dev) =>
       {
         if (dev.profileImageID)
         {
@@ -122,7 +175,79 @@ export class UserService
       }),
     );
 
-    return updatedDevelopers;
+    return updatedDevelopers; // Return users with their tasks
+  }
+
+  async findTasksByUserIds(userIds: number[]): Promise<Card[]>
+  {
+    if (userIds.length === 0)
+    {
+      return []; // Return an empty array if no user IDs are provided
+    }
+
+    // Create a query builder to fetch tasks associated with the user IDs
+    const queryBuilder = this.cardRepository.createQueryBuilder('card')
+      .innerJoin('card.users', 'user') // Join to the user table via the join table
+      .where('user.id IN (:...userIds)', { userIds }); // Filter by user IDs
+
+    // Execute the query to get all relevant task cards
+    const tasks = await queryBuilder.getMany();
+
+    return tasks; // Return the list of task cards
+  }
+
+  async countDevelopers(
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<number>
+  {
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .where('user.role = :role', { role: 'developer' });
+
+    // Filter by name if provided
+    if (name)
+    {
+      const nameSearch = `%${name.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
+      );
+    }
+
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
+
+    // Filter by services if provided
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
+        { services: servicesSearch }
+      );
+    }
+
+    // Filter by tasks if provided
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        { tasks: tasksSearch }
+      );
+    }
+
+    // Execute the count query
+    return queryBuilder.getCount(); // Still only fetching count, page and limit typically not needed here
   }
 
   // ✅ Get one user (with signed image URL)
@@ -136,7 +261,8 @@ export class UserService
       try
       {
         user.profileImage = await this.s3Service.getSignedUrl(user.profileImageID);
-      } catch {
+      } catch
+      {
         user.profileImage = null;
       }
     }
