@@ -5,9 +5,10 @@ import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { TasksController } from './tasks.controller';
 import { Card } from 'src/card/entities/card.entity';
 import { User } from 'src/user/entities/user.entity';
+import { Service } from 'src/service/entities/service.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ TaskBoard, Card, User ]), // Ensure both entities are imported
+    TypeOrmModule.forFeature([ TaskBoard, Card, User, Service ]), // Ensure both entities are imported
   ],
   providers: [ TasksService ],
   controllers: [ TasksController ],

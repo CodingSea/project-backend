@@ -25,63 +25,60 @@ declare module 'express' {
 }
 
 @Controller('tasks')
-export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+export class TasksController
+{
+    constructor(private readonly tasksService: TasksService) { }
 
-  // ✅ Protect all task routes with your existing AuthGuard
-  @UseGuards(AuthGuard)
+    // Create a TaskBoard
+    @Post('task-board')
+    async createTaskBoard(@Body('id') serviceId: number): Promise<TaskBoard>
+    {
+        return this.tasksService.createTaskBoard(serviceId);
+    }
 
-  // Create a TaskBoard
-  @Post('task-board')
-  async createTaskBoard(@Body('id') id: number): Promise<TaskBoard> {
-    return this.tasksService.createTaskBoard(id);
-  }
 
-  // Get All TaskBoards
-  @Get('task-boards')
-  async findAllTaskBoards(): Promise<TaskBoard[]> {
-    return this.tasksService.findAllTaskBoards();
-  }
+    // Get All TaskBoards
+    @Get('task-boards')
+    async findAllTaskBoards(): Promise<TaskBoard[]>
+    {
+        return this.tasksService.findAllTaskBoards();
+    }
 
-  // Get TaskBoard by ID
-  @Get('task-board/:id')
-  async findTaskBoardById(@Param('id') id: number): Promise<TaskBoard | null> {
-    return this.tasksService.findTaskBoardById(id);
-  }
+    // Get TaskBoard by ID
+    @Get('task-board/:id')
+    async findTaskBoardById(@Param('id') id: number): Promise<TaskBoard | null>
+    {
+        return this.tasksService.findTaskBoardById(id);
+    }
 
-  // Update TaskBoard
-  @Patch('task-board/:id')
-  async updateTaskBoard(
-    @Param('id') id: number,
-    @Body('serviceID') serviceID: number,
-  ): Promise<TaskBoard | null> {
-    return this.tasksService.updateTaskBoard(id, serviceID);
-  }
+    // Update TaskBoard
+    @Patch('task-board/:id')
+    async updateTaskBoard(@Param('id') id: number, @Body('serviceID') serviceID: number): Promise<TaskBoard | null>
+    {
+        return this.tasksService.updateTaskBoard(id, serviceID);
+    }
 
-  // Delete TaskBoard
-  @Delete('task-board/:id')
-  async deleteTaskBoard(@Param('id') id: number): Promise<void> {
-    return this.tasksService.deleteTaskBoard(id);
-  }
+    // Delete TaskBoard
+    @Delete('task-board/:id')
+    async deleteTaskBoard(@Param('id') id: number): Promise<void>
+    {
+        return this.tasksService.deleteTaskBoard(id);
+    }
 
-  // ✅ Create a Card (only chief, manager, or admin can)
-  @Post(':taskBoardId/cards')
-  async createCard(
-    @Param('taskBoardId') taskBoardId: number,
-    @Body() createCardDto: CreateCardDto,
-    @Req() req: Request,
-  ): Promise<Card> {
-    const user = req.user as any; // expecting { id, role, email, ... }
-    if (!user) throw new ForbiddenException('Unauthorized access');
+    // Create a Card
+    @Post(':taskBoardId/cards')
+    async createCard(
+        @Param('taskBoardId') taskBoardId: number,
+        @Body() createCardDto: CreateCardDto // Accept the DTO directly
+    ): Promise<Card>
+    {
+        return this.tasksService.createCard(taskBoardId, createCardDto);
+    }
 
-    return this.tasksService.createCard(taskBoardId, createCardDto, user);
-  }
-
-  // Get All Cards for a TaskBoard
-  @Get('task-board/:taskBoardId/cards')
-  async findAllCards(
-    @Param('taskBoardId') taskBoardId: number,
-  ): Promise<Card[]> {
-    return this.tasksService.findAllCards(taskBoardId);
-  }
+    // Get All Cards for a TaskBoard
+    @Get('task-board/:taskBoardId/cards')
+    async findAllCards(@Param('taskBoardId') taskBoardId: number): Promise<Card[]>
+    {
+        return this.tasksService.findAllCards(taskBoardId);
+    }
 }

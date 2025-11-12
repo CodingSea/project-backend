@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
 import { UpdateCardDto } from 'src/card/dto/update-card.dto';
 import { Card } from 'src/card/entities/card.entity';
+import { Service } from 'src/service/entities/service.entity';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { User } from 'src/user/entities/user.entity';
 import { In, Repository } from 'typeorm';
@@ -23,17 +24,33 @@ export class TasksService {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) {}
+
+    @InjectRepository(Service)
+    private serviceRepository: Repository<Service>,
+  ) { }
 
   /* -------------------- Task Board CRUD -------------------- */
 
-  async createTaskBoard(id: number): Promise<TaskBoard> {
-    const taskBoard = this.taskboardRepository.create({ id });
+  async createTaskBoard(serviceId: number): Promise<TaskBoard>
+  {
+    // 1. Find the service
+    const service = await this.serviceRepository.findOne({ where: { serviceID: serviceId } });
+    if (!service)
+    {
+      throw new NotFoundException(`Service with id ${serviceId} not found`);
+    }
+
+    // 2. Create a new task board and link it to the service
+    const taskBoard = this.taskboardRepository.create({ service });
+
+    // 3. Save and return
     return await this.taskboardRepository.save(taskBoard);
   }
 
-  async findAllTaskBoards(): Promise<TaskBoard[]> {
-    return await this.taskboardRepository.find({ relations: ['cards'] });
+
+  async findAllTaskBoards(): Promise<TaskBoard[]>
+  {
+    return await this.taskboardRepository.find({ relations: [ 'cards' ] });
   }
 
   async findTaskBoardById(id: number): Promise<TaskBoard | null> {

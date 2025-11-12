@@ -111,6 +111,8 @@ export class UserService
 
     const queryBuilder = this.userRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
+      .leftJoinAndSelect('card.taskBoard', 'taskBoard') // Left join to get associated taskBoard
+      .leftJoinAndSelect('taskBoard.service', 'service') // Left join to get associated service
       .where('user.role = :role', { role: 'developer' })
       .skip(skip)
       .take(limit); // Limit results
@@ -135,7 +137,7 @@ export class UserService
       );
     }
 
-    // Filter by services if provided (assuming you have a service field or relationship)
+    // Filter by services if provided
     if (services)
     {
       const servicesSearch = `%${services.toLowerCase()}%`;
@@ -145,37 +147,25 @@ export class UserService
       );
     }
 
-    // Filter by tasks if provided (assuming you have a tasks field or relationship)
+    // Filter by tasks if provided
     if (tasks)
     {
       const tasksSearch = `%${tasks.toLowerCase()}%`;
       queryBuilder.andWhere(
-        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        `EXISTS (
+          SELECT 1 FROM card AS task 
+          WHERE task.id = card.id AND LOWER(task.title) LIKE :tasks
+        )`,
         { tasks: tasksSearch }
       );
     }
 
-    // Execute the query to get users with their associated cards
+    // Execute the query to get users with their associated cards, taskBoards, and services
     const developersWithCards = await queryBuilder.getMany();
 
-    // Optionally, process developers to include signed URLs for profile images
-    const updatedDevelopers = await Promise.all(
-      developersWithCards.map(async (dev) =>
-      {
-        if (dev.profileImageID)
-        {
-          try
-          {
-            dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch {
-            dev.profileImage = null;
-          }
-        }
-        return dev;
-      }),
-    );
-
-    return updatedDevelopers; // Return users with their tasks
+    // Process developers if necessary...
+    // Return users with their tasks, task boards, and services
+    return developersWithCards;
   }
 
   async findTasksByUserIds(userIds: number[]): Promise<Card[]>
@@ -188,6 +178,8 @@ export class UserService
     // Create a query builder to fetch tasks associated with the user IDs
     const queryBuilder = this.cardRepository.createQueryBuilder('card')
       .innerJoin('card.users', 'user') // Join to the user table via the join table
+      .leftJoinAndSelect('card.taskBoard', 'taskBoard') // Join to the user table via the join table
+      .leftJoinAndSelect('card.taskBoard.service', 'taskBoard.service') // Join to the user table via the join table
       .where('user.id IN (:...userIds)', { userIds }); // Filter by user IDs
 
     // Execute the query to get all relevant task cards
@@ -241,7 +233,7 @@ export class UserService
     {
       const tasksSearch = `%${tasks.toLowerCase()}%`;
       queryBuilder.andWhere(
-        'EXISTS (SELECT 1 FROM user.cards AS task WHERE LOWER(task.title) LIKE :tasks)',
+        'EXISTS (SELECT 1 FROM card AS task WHERE LOWER(task.title) LIKE :tasks)',
         { tasks: tasksSearch }
       );
     }

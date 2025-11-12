@@ -50,10 +50,7 @@ export class Service
   @Column({ type: 'json', nullable: true })
   files?: { name: string; url: string }[];
 
-  @ManyToOne(() => Project, (project) => project.services, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
+  @ManyToOne(() => Project, (project) => project.services, { onDelete: 'CASCADE', nullable: true })
   project?: Project;
 
   @ManyToOne(() => User, { nullable: true })
@@ -74,7 +71,6 @@ export class Service
     cascade: true,
     nullable: true,
   })
-  @JoinColumn()
   taskBoard: TaskBoard;
 
   @OneToOne(() => Issue, issue => issue.service, { cascade: true })
