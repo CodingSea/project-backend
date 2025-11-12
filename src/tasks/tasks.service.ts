@@ -86,7 +86,7 @@ export class TasksService {
   async createCard(
     taskBoardId: number,
     createCardDto: CreateCardDto,
-    user: any,
+    user?: any,
   ): Promise<Card> {
     const { column, title, description, tags, order, color, assignedUserId, users } =
       createCardDto;
