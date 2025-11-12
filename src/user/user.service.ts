@@ -108,6 +108,7 @@ export class UserService
       .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
       .leftJoinAndSelect('card.taskBoard', 'taskBoard') // Left join to get associated taskBoard
       .leftJoinAndSelect('taskBoard.service', 'service') // Left join to get associated service
+      .leftJoinAndSelect('service.project', 'project') // Left join to get associated service
       .where('user.role = :role', { role: 'developer' })
       .skip(skip)
       .take(limit); // Limit results
