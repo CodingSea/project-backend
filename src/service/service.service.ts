@@ -11,7 +11,8 @@ import { TasksService } from 'src/tasks/tasks.service';
 import { Issue } from 'src/issue/entities/issue.entity';
 
 @Injectable()
-export class ServiceService {
+export class ServiceService
+{
   constructor(
     @InjectRepository(Service)
     private readonly svcRepo: Repository<Service>,
@@ -29,9 +30,10 @@ export class ServiceService {
     private readonly issueRepo: Repository<Issue>,
 
     private readonly tasksService: TasksService,
-  ) {}
+  ) { }
 
-  async create(dto: CreateServiceDto): Promise<Service> {
+  async create(dto: CreateServiceDto): Promise<Service>
+  {
     if (!dto.chiefId) throw new BadRequestException('Chief is required to create a service');
 
     const svc = this.svcRepo.create({
@@ -51,13 +53,15 @@ export class ServiceService {
     if (!chief) throw new NotFoundException(`Chief ${dto.chiefId} not found`);
     svc.chief = chief;
 
-    if (dto.managerId) {
+    if (dto.managerId)
+    {
       const manager = await this.userRepo.findOneBy({ id: dto.managerId });
       if (!manager) throw new NotFoundException(`Manager ${dto.managerId} not found`);
       svc.projectManager = manager;
     }
 
-    if (dto.resources?.length) {
+    if (dto.resources?.length)
+    {
       svc.assignedResources = await this.userRepo.find({ where: { id: In(dto.resources) } });
     }
 
@@ -75,22 +79,25 @@ export class ServiceService {
 
     const saved = await this.svcRepo.save(svc);
 
-    if (saved.taskBoard && saved.taskBoard.service) {
+    if (saved.taskBoard && saved.taskBoard.service)
+    {
       delete (saved.taskBoard as any)?.service;
     }
 
     return saved;
   }
 
-  findAll(): Promise<Service[]> {
+  findAll(): Promise<Service[]>
+  {
     return this.svcRepo.find({
-      relations: ['project', 'chief', 'projectManager', 'assignedResources'],
+      relations: [ 'project', 'chief', 'projectManager', 'assignedResources' ],
       order: { serviceID: 'DESC' },
     });
   }
 
   // ✅ UPDATED: Supports "hasTasks" filter
-  async findAllFiltered(search?: string, status?: string, hasTasks?: string): Promise<Service[]> {
+  async findAllFiltered(search?: string, status?: string, hasTasks?: string): Promise<Service[]>
+  {
     const qb = this.svcRepo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.project', 'project')
@@ -101,28 +108,33 @@ export class ServiceService {
       .leftJoinAndSelect('taskBoard.cards', 'cards')
       .orderBy('service.serviceID', 'DESC');
 
-    if (search) {
+    if (search)
+    {
       qb.andWhere(
         '(LOWER(service.name) LIKE LOWER(:search) OR LOWER(service.description) LIKE LOWER(:search))',
         { search: `%${search}%` },
       );
     }
 
-    if (status) {
+    if (status)
+    {
       qb.andWhere('service.status = :status', { status });
     }
 
     // 🟩 New Filter: Has Tasks
-    if (hasTasks === 'true') {
+    if (hasTasks === 'true')
+    {
       qb.andWhere('cards.id IS NOT NULL');
-    } else if (hasTasks === 'false') {
+    } else if (hasTasks === 'false')
+    {
       qb.andWhere('cards.id IS NULL');
     }
 
     return qb.getMany();
   }
 
-  async findOne(id: number): Promise<Service> {
+  async findOne(id: number): Promise<Service>
+  {
     const svc = await this.svcRepo.findOne({
       where: { serviceID: id },
       relations: [
@@ -138,7 +150,8 @@ export class ServiceService {
     return svc;
   }
 
-  async update(id: number, dto: UpdateServiceDto): Promise<Service> {
+  async update(id: number, dto: UpdateServiceDto): Promise<Service>
+  {
     const svc = await this.findOne(id);
     if (dto.name !== undefined) svc.name = dto.name;
     if (dto.description !== undefined) svc.description = dto.description;
@@ -146,25 +159,29 @@ export class ServiceService {
       svc.deadline = dto.deadline ? new Date(dto.deadline) : undefined;
     if (dto.status !== undefined) svc.status = dto.status;
 
-    if (dto.projectId !== undefined) {
+    if (dto.projectId !== undefined)
+    {
       const project = await this.projectRepo.findOneBy({ projectID: dto.projectId });
       if (!project) throw new NotFoundException(`Project ${dto.projectId} not found`);
       svc.project = project;
     }
 
-    if (dto.chiefId !== undefined) {
+    if (dto.chiefId !== undefined)
+    {
       const chief = dto.chiefId ? await this.userRepo.findOneBy({ id: dto.chiefId }) : undefined;
       svc.chief = chief ?? undefined;
     }
 
-    if (dto.managerId !== undefined) {
+    if (dto.managerId !== undefined)
+    {
       const manager = dto.managerId
         ? await this.userRepo.findOneBy({ id: dto.managerId })
         : undefined;
       svc.projectManager = manager ?? undefined;
     }
 
-    if (dto.resources !== undefined) {
+    if (dto.resources !== undefined)
+    {
       svc.assignedResources = dto.resources?.length
         ? await this.userRepo.find({ where: { id: In(dto.resources) } })
         : [];
@@ -175,7 +192,8 @@ export class ServiceService {
     return this.svcRepo.save(svc);
   }
 
-  async getAllServicesForUser(userId: number): Promise<Service[]> {
+  async getAllServicesForUser(userId: number): Promise<Service[]>
+  {
     const services = await this.svcRepo
       .createQueryBuilder('service')
       .leftJoinAndSelect('service.chief', 'chief')
@@ -192,10 +210,11 @@ export class ServiceService {
     return services;
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number): Promise<void>
+  {
     const service = await this.svcRepo.findOne({
       where: { serviceID: id },
-      relations: ['taskBoard', 'issue'],
+      relations: [ 'taskBoard', 'issue' ],
     });
     if (!service) throw new NotFoundException('Service not found');
 
@@ -204,7 +223,8 @@ export class ServiceService {
     if (service.issue) await this.issueRepo.remove(service.issue);
   }
 
-  async updateStatus(id: number, status: ServiceStatus): Promise<Service> {
+  async updateStatus(id: number, status: ServiceStatus): Promise<Service>
+  {
     const service = await this.svcRepo.findOne({ where: { serviceID: id } });
     if (!service) throw new NotFoundException('Service not found');
     if (!Object.values(ServiceStatus).includes(status as ServiceStatus))
