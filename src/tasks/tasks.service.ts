@@ -1,9 +1,10 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import
+  {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+    ForbiddenException,
+  } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
 import { UpdateCardDto } from 'src/card/dto/update-card.dto';
@@ -14,7 +15,8 @@ import { User } from 'src/user/entities/user.entity';
 import { In, Repository } from 'typeorm';
 
 @Injectable()
-export class TasksService {
+export class TasksService
+{
   constructor(
     @InjectRepository(TaskBoard)
     private taskboardRepository: Repository<TaskBoard>,
@@ -27,15 +29,17 @@ export class TasksService {
 
     @InjectRepository(Service)
     private serviceRepository: Repository<Service>,
-  ) {}
+  ) { }
 
   /* -------------------- Task Board CRUD -------------------- */
 
-  async createTaskBoard(serviceId: number): Promise<TaskBoard> {
+  async createTaskBoard(serviceId: number): Promise<TaskBoard>
+  {
     const service = await this.serviceRepository.findOne({
       where: { serviceID: serviceId },
     });
-    if (!service) {
+    if (!service)
+    {
       throw new NotFoundException(`Service with id ${serviceId} not found`);
     }
 
@@ -43,12 +47,14 @@ export class TasksService {
     return await this.taskboardRepository.save(taskBoard);
   }
 
-  async findAllTaskBoards(): Promise<TaskBoard[]> {
-    return await this.taskboardRepository.find({ relations: ['cards'] });
+  async findAllTaskBoards(): Promise<TaskBoard[]>
+  {
+    return await this.taskboardRepository.find({ relations: [ 'cards' ] });
   }
 
-  async findTaskBoardById(id: number): Promise<TaskBoard | null> {
-    return await this.taskboardRepository.findOne({
+  async findTaskBoardById(id: number): Promise<TaskBoard>
+  {
+    const taskBoard = await this.taskboardRepository.findOne({
       where: { id },
       relations: [
         'cards',
@@ -59,14 +65,23 @@ export class TasksService {
         'service.project',
       ],
     });
+
+    if (!taskBoard)
+    {
+      throw new Error(`TaskBoard with ID ${id} not found`);
+    }
+
+    return taskBoard;
   }
 
-  async updateTaskBoard(id: number, serviceID: number): Promise<TaskBoard | null> {
+  async updateTaskBoard(id: number, serviceID: number): Promise<TaskBoard | null>
+  {
     await this.taskboardRepository.update(id, { id });
     return this.findTaskBoardById(id);
   }
 
-  async deleteTaskBoard(id: number): Promise<void> {
+  async deleteTaskBoard(id: number): Promise<void>
+  {
     await this.taskboardRepository.delete(id);
   }
 
@@ -76,12 +91,13 @@ export class TasksService {
     taskBoardId: number,
     createCardDto: CreateCardDto,
     user?: any,
-  ): Promise<Card> {
+  ): Promise<Card>
+  {
     const { column, title, description, tags, order, color, users } = createCardDto;
 
     const taskBoard = await this.taskboardRepository.findOne({
       where: { id: taskBoardId },
-      relations: ['service', 'service.chief', 'service.projectManager'],
+      relations: [ 'service', 'service.chief', 'service.projectManager' ],
     });
     if (!taskBoard) throw new NotFoundException('TaskBoard not found');
 
@@ -106,7 +122,8 @@ export class TasksService {
     });
 
     // ✅ Assign multiple users (many-to-many)
-    if (users && users.length > 0) {
+    if (users && users.length > 0)
+    {
       const userEntities = await this.userRepository.findBy({ id: In(users) });
       card.users = userEntities;
     }
@@ -114,18 +131,20 @@ export class TasksService {
     return await this.cardRepository.save(card);
   }
 
-  async findAllCards(taskBoardId: number): Promise<Card[]> {
+  async findAllCards(taskBoardId: number): Promise<Card[]>
+  {
     const cards = await this.cardRepository.find({
       where: { taskBoard: { id: taskBoardId } },
-      relations: ['users'],
+      relations: [ 'users' ],
     });
     return cards;
   }
 
-  async getCardsFromTaskBoard(serviceId: number): Promise<Card[]> {
+  async getCardsFromTaskBoard(serviceId: number): Promise<Card[]>
+  {
     const taskboard = await this.taskboardRepository.findOne({
       where: { service: { serviceID: serviceId } },
-      relations: ['cards', 'cards.users'],
+      relations: [ 'cards', 'cards.users' ],
     });
 
     if (!taskboard)
@@ -141,14 +160,16 @@ export class TasksService {
     cardId: number,
     updateCardDto: UpdateCardDto,
     user?: any,
-  ): Promise<Card> {
+  ): Promise<Card>
+  {
     const taskBoard = await this.taskboardRepository.findOne({
       where: { id: taskBoardId },
-      relations: ['service', 'service.chief', 'service.projectManager'],
+      relations: [ 'service', 'service.chief', 'service.projectManager' ],
     });
     if (!taskBoard) throw new NotFoundException('Task Board not found');
 
-    if (user) {
+    if (user)
+    {
       const isAuthorized =
         user.role === 'admin' ||
         taskBoard.service?.chief?.id === user.id ||
@@ -162,7 +183,7 @@ export class TasksService {
 
     const card = await this.cardRepository.findOne({
       where: { id: cardId, taskBoard: { id: taskBoardId } },
-      relations: ['users'],
+      relations: [ 'users' ],
     });
     if (!card) throw new NotFoundException('Card not found');
 
@@ -175,10 +196,13 @@ export class TasksService {
     if (updateCardDto.color !== undefined) card.color = updateCardDto.color;
 
     // ✅ Update users (many-to-many)
-    if (updateCardDto.users !== undefined) {
-      if (updateCardDto.users.length === 0) {
+    if (updateCardDto.users !== undefined)
+    {
+      if (updateCardDto.users.length === 0)
+      {
         card.users = [];
-      } else {
+      } else
+      {
         const userEntities = await this.userRepository.findBy({
           id: In(updateCardDto.users),
         });
@@ -192,8 +216,10 @@ export class TasksService {
   async createCardIfNotExists(
     taskBoardId: number,
     createCardDto: CreateCardDto,
-  ): Promise<Card> {
-    try {
+  ): Promise<Card>
+  {
+    try
+    {
       const { title, column, description, tags, order, color, users } =
         createCardDto;
 
@@ -215,19 +241,22 @@ export class TasksService {
         color,
       });
 
-      if (users && users.length > 0) {
+      if (users && users.length > 0)
+      {
         const userEntities = await this.userRepository.findBy({ id: In(users) });
         newCard.users = userEntities;
       }
 
       return await this.cardRepository.save(newCard);
-    } catch (error) {
+    } catch (error)
+    {
       console.error('Error creating card:', error);
       throw error;
     }
   }
 
-  async deleteCard(cardId: number): Promise<void> {
+  async deleteCard(cardId: number): Promise<void>
+  {
     await this.cardRepository.delete(cardId);
   }
 }
