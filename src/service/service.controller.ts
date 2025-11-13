@@ -63,14 +63,15 @@ export class ServiceController {
     return this.serviceService.create(dto);
   }
 
-  // ✅ GET ALL SERVICES (with optional search & filter)
+  // ✅ GET ALL SERVICES (with optional search, status, or hasTasks filter)
   @Get()
   async findAllFiltered(
     @Query('search') search?: string,
     @Query('status') status?: string,
+    @Query('hasTasks') hasTasks?: string, // 🟩 new filter parameter
   ) {
-    if (search || status) {
-      return this.serviceService.findAllFiltered(search, status);
+    if (search || status || hasTasks) {
+      return this.serviceService.findAllFiltered(search, status, hasTasks);
     }
     return this.serviceService.findAll();
   }

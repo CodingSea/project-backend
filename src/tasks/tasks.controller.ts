@@ -1,8 +1,28 @@
-import { Controller, Post, Get, Param, Body, Delete, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Param,
+  Body,
+  Delete,
+  Patch,
+  Req,
+  ForbiddenException,
+  UseGuards,
+} from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskBoard } from 'src/task-board/entities/task-board.entity';
 import { Card } from 'src/card/entities/card.entity';
 import { CreateCardDto } from 'src/card/dto/create-card.dto';
+import type { Request } from 'express';
+import { AuthGuard } from 'src/auth/auth.guard'; // ✅ use your existing guard
+
+// 👇 Extend Express Request type to include user info
+declare module 'express' {
+  interface Request {
+    user?: any;
+  }
+}
 
 @Controller('tasks')
 export class TasksController
@@ -11,10 +31,11 @@ export class TasksController
 
     // Create a TaskBoard
     @Post('task-board')
-    async createTaskBoard(@Body('id') id: number): Promise<TaskBoard>
+    async createTaskBoard(@Body('id') serviceId: number): Promise<TaskBoard>
     {
-        return this.tasksService.createTaskBoard(id);
+        return this.tasksService.createTaskBoard(serviceId);
     }
+
 
     // Get All TaskBoards
     @Get('task-boards')
@@ -49,7 +70,8 @@ export class TasksController
     async createCard(
         @Param('taskBoardId') taskBoardId: number,
         @Body() createCardDto: CreateCardDto // Accept the DTO directly
-    ): Promise<Card> {
+    ): Promise<Card>
+    {
         return this.tasksService.createCard(taskBoardId, createCardDto);
     }
 

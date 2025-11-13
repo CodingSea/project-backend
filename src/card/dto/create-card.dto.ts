@@ -1,5 +1,6 @@
 import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 import { Comment } from "src/comment/entities/comment.entity";
+import { User } from "src/user/entities/user.entity";
 
 export class CreateCardDto {
   @IsNotEmpty()
@@ -16,7 +17,7 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsArray()
-  tags: string[];
+  tags?: string[];
 
   @IsOptional()
   comments?: Comment[];
@@ -27,10 +28,12 @@ export class CreateCardDto {
 
   @IsOptional()
   @IsString()
-  color: string;
+  color?: string;
 
-  // ✅ NEW — optional assigned user ID
+
+
+  // ✅ Support multiple user objects for future flexibility
   @IsOptional()
-  @IsNumber()
-  assignedUserId?: number;
+  @IsArray()
+  users?: User[];
 }

@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
 import { S3Service } from 'src/s3/s3.service';
+import { Card } from 'src/card/entities/card.entity';
 
 @Injectable()
 export class UserService
@@ -13,7 +14,11 @@ export class UserService
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+
     private readonly s3Service: S3Service,
+
+    @InjectRepository(Card)
+    private readonly cardRepository: Repository<Card>,
   ) { }
 
   // ✅ Create new user
@@ -36,7 +41,7 @@ export class UserService
   {
     for (let i = 0; i < createUserDtos.length; i++)
     {
-      const element = createUserDtos[ i ];
+      const element = createUserDtos[i];
 
       this.create(element);
     }
@@ -76,7 +81,8 @@ export class UserService
           try
           {
             dev.profileImage = await this.s3Service.getSignedUrl(dev.profileImageID);
-          } catch {
+          } catch
+          {
             dev.profileImage = null;
           }
         }
@@ -85,6 +91,148 @@ export class UserService
     );
 
     return updatedDevelopers;
+  }
+
+  async findAllDevelopersWithCards(
+    page: number,
+    limit: number,
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<User[]>
+  {
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .leftJoinAndSelect('user.cards', 'card') // Left join to get associated cards
+      .leftJoinAndSelect('card.taskBoard', 'taskBoard') // Left join to get associated taskBoard
+      .leftJoinAndSelect('taskBoard.service', 'service') // Left join to get associated service
+      .leftJoinAndSelect('service.project', 'project') // Left join to get associated service
+      .where('user.role = :role', { role: 'developer' })
+      .skip(skip)
+      .take(limit); // Limit results
+
+    // Filter by name if provided
+    if (name)
+    {
+      const nameSearch = `%${name.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
+      );
+    }
+
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
+
+    // Filter by services if provided
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere('LOWER(service.name) LIKE :services', { services: servicesSearch });
+    }
+
+    // Filter by tasks if provided
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        `EXISTS (
+          SELECT 1 FROM card AS task 
+          WHERE task.id = card.id AND LOWER(task.title) LIKE :tasks
+        )`,
+        { tasks: tasksSearch }
+      );
+    }
+
+    // Execute the query to get users with their associated cards, taskBoards, and services
+    const developersWithCards = await queryBuilder.getMany();
+
+    // Process developers if necessary...
+    // Return users with their tasks, task boards, and services
+    return developersWithCards;
+  }
+
+  async findTasksByUserIds(userIds: number[]): Promise<Card[]>
+  {
+    if (userIds.length === 0)
+    {
+      return []; // Return an empty array if no user IDs are provided
+    }
+
+    // Create a query builder to fetch tasks associated with the user IDs
+    const queryBuilder = this.cardRepository.createQueryBuilder('card')
+      .innerJoin('card.users', 'user') // Join to the user table via the join table
+      .leftJoinAndSelect('card.taskBoard', 'taskBoard') // Join to the user table via the join table
+      .leftJoinAndSelect('card.taskBoard.service', 'taskBoard.service') // Join to the user table via the join table
+      .where('user.id IN (:...userIds)', { userIds }); // Filter by user IDs
+
+    // Execute the query to get all relevant task cards
+    const tasks = await queryBuilder.getMany();
+
+    return tasks; // Return the list of task cards
+  }
+
+  async countDevelopers(
+    name?: string,
+    skills?: string,
+    services?: string,
+    tasks?: string,
+  ): Promise<number>
+  {
+    const queryBuilder = this.userRepository.createQueryBuilder('user')
+      .where('user.role = :role', { role: 'developer' });
+
+    // Filter by name if provided
+    if (name)
+    {
+      const nameSearch = `%${name.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        '(LOWER(user.first_name) LIKE :name OR LOWER(user.last_name) LIKE :name)',
+        { name: nameSearch }
+      );
+    }
+
+    // Filter by skills if provided
+    if (skills)
+    {
+      const skillsSearch = `%${skills.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM unnest(user.skills) AS skill WHERE LOWER(skill) LIKE :skills)',
+        { skills: skillsSearch }
+      );
+    }
+
+    // Filter by services if provided
+    if (services)
+    {
+      const servicesSearch = `%${services.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM user.services AS service WHERE LOWER(service.name) LIKE :services)',
+        { services: servicesSearch }
+      );
+    }
+
+    // Filter by tasks if provided
+    if (tasks)
+    {
+      const tasksSearch = `%${tasks.toLowerCase()}%`;
+      queryBuilder.andWhere(
+        'EXISTS (SELECT 1 FROM card AS task WHERE LOWER(task.title) LIKE :tasks)',
+        { tasks: tasksSearch }
+      );
+    }
+
+    // Execute the count query
+    return queryBuilder.getCount(); // Still only fetching count, page and limit typically not needed here
   }
 
   // ✅ Get one user (with signed image URL)
@@ -98,7 +246,8 @@ export class UserService
       try
       {
         user.profileImage = await this.s3Service.getSignedUrl(user.profileImageID);
-      } catch {
+      } catch
+      {
         user.profileImage = null;
       }
     }
@@ -170,4 +319,42 @@ export class UserService
 
     return { message: 'Profile image deleted successfully' };
   }
+
+  // 👇 add this at the end of UserService class
+  async assignUsersToTask(taskId: number, userIds: number[]): Promise<{ message: string }>
+  {
+    if (!userIds || userIds.length === 0)
+    {
+      return { message: 'No users provided.' };
+    }
+
+    try
+    {
+      const users = await this.userRepository.findByIds(userIds);
+
+      if (users.length === 0)
+      {
+        return { message: 'No valid users found.' };
+      }
+
+      // Optional: log or update a relation table
+      // Example: if you have a Task entity, you could do something like:
+      // const task = await this.taskRepository.findOne({ where: { id: taskId } });
+      // task.assignedUsers = users;
+      // await this.taskRepository.save(task);
+
+      // If you don’t have a direct join table yet, this ensures they exist
+      for (const u of users)
+      {
+        console.log(`📌 Assigned ${u.first_name} ${u.last_name} to task ${taskId}`);
+      }
+
+      return { message: `Assigned ${users.length} users to task ${taskId}` };
+    } catch (error)
+    {
+      console.error('Error assigning users to task:', error);
+      throw error;
+    }
+  }
+
 }
