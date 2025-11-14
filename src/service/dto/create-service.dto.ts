@@ -37,16 +37,17 @@ export class CreateServiceDto {
   @IsOptional()
   chiefId?: number;
 
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  managerId?: number;
+@IsOptional()
+@Type(() => Number)
+@IsInt()
+managerId?: number | null;
+
 
   // ✅ The array of resource IDs (consistent with frontend)
   @IsArray()
   @Type(() => Number)
   @IsInt({ each: true })
-  resources: number[];
+  resources?: number[];
 
   // ✅ Optional: existing files (for update/edit)
   @IsOptional()
