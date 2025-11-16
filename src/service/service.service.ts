@@ -131,6 +131,7 @@ export class ServiceService {
         'projectManager',
         'assignedResources',
         'taskBoard',
+        'taskBoard.cards',
         'issue',
       ],
     });
