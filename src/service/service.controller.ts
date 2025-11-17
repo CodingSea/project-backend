@@ -51,7 +51,7 @@ export class ServiceController {
       deadline: body.deadline,
       projectId: Number(body.projectId),
       chiefId: Number(body.chiefId),
-      managerId: body.managerId ? Number(body.managerId) : undefined,
+managerId: body.managerId ? Number(body.managerId) : null,
       resources: Array.isArray(body.resources)
         ? body.resources.map((r: any) => Number(r))
         : body.resources
@@ -106,6 +106,30 @@ export class ServiceController {
     console.log('UPDATE → files received:', newFiles?.length || 0);
 
     const dto: UpdateServiceDto = { ...body };
+    
+    if (typeof body.resources === 'string') {
+  try {
+    body.resources = JSON.parse(body.resources);
+  } catch {
+    body.resources = [];
+  }
+}
+
+if (!Array.isArray(body.resources)) {
+  body.resources = [];
+}
+
+dto.resources = body.resources;
+// 🔥 FIX FOR MANAGER (remove manager correctly)
+if (body.managerId === 'null' || body.managerId === '' || body.managerId === null) {
+  body.managerId = null;
+} else if (body.managerId) {
+  body.managerId = Number(body.managerId);
+}
+
+dto.managerId = body.managerId;
+
+
     if (typeof dto.files === 'string') dto.files = JSON.parse(dto.files || '[]');
     const filesToDelete = body.filesToDelete ? JSON.parse(body.filesToDelete) : [];
 

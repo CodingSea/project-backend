@@ -57,7 +57,7 @@ export class Service
   chief?: User;
 
   @ManyToOne(() => User, { nullable: true })
-  projectManager?: User;
+projectManager: User | null;
 
   @ManyToMany(() => User)
   @JoinTable()
