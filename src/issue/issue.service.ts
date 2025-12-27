@@ -117,9 +117,18 @@ export class IssueService
     // Issue Creator Image
     if (issue.createdBy?.profileImageID)
     {
-      issue.createdBy.profileImage = await this.s3Service.getSignedUrl(
-        issue.createdBy.profileImageID
-      );
+      try
+      {
+        issue.createdBy.profileImage = await this.s3Service.getSignedUrl(issue.createdBy.profileImageID);
+      } catch (e)
+      {
+        console.error("S3 Error:", e);
+        issue.createdBy.profileImage = null; // Ensure it stays null for frontend fallback
+      }
+    } else
+    {
+      // If no ID exists, explicitly set to null so frontend knows to use fallback
+      if (issue.createdBy) issue.createdBy.profileImage = null;
     }
 
     // Issue Attachments
