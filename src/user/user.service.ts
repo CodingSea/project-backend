@@ -156,9 +156,26 @@ export class UserService
     // Execute the query to get users with their associated cards, taskBoards, and services
     const developersWithCards = await queryBuilder.getMany();
 
-    // Process developers if necessary...
-    // Return users with their tasks, task boards, and services
-    return developersWithCards;
+    const processedDevelopers = await Promise.all(
+      developersWithCards.map(async (user) =>
+      {
+        if (user.profileImageID)
+        {
+          try
+          {
+            // Replace the ID/Key with the actual temporary S3 URL
+            user.profileImage = await this.s3Service.getSignedUrl(user.profileImageID);
+          } catch (error)
+          {
+            console.error(`Failed to sign URL for user ${user.id}:`, error);
+            user.profileImage = null;
+          }
+        }
+        return user;
+      }),
+    );
+
+    return processedDevelopers;
   }
 
   async findTasksByUserIds(userIds: number[]): Promise<Card[]>
